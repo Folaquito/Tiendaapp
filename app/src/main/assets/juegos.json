@@ -2,32 +2,57 @@
   {
     "id": 1,
     "nombre": "Cyberpunk 2077",
-    "descripcion": "Juego1",
+    "descripcion": "RPG futurista en una ciudad llena de tecnología, crimen y decisiones que cambian la historia.",
     "precio": 30000,
-    "genero": "Accion",
-    "imagen": "cyberpunk_2077"  },
+    "genero": "Accion / RPG",
+    "imagen": "cyberpunk_2077",
+    "imagend1": "cy1",
+    "imagend2": "cy2",
+    "valoracion": 86,
+    "descripcionlarga": "Sumérgete en Night City, una megaciudad futurista llena de luces de neón, tecnología avanzada y corrupción. En este RPG de mundo abierto interpretas a V, un mercenario en busca de un implante legendario que promete la inmortalidad. Explora un entorno vibrante, toma decisiones que afectan el desarrollo de la historia y personaliza completamente tu estilo de juego en un universo lleno de acción, misterio y conspiraciones corporativas.",
+    "comentario1": "Después de las actualizaciones, el juego quedó increíble. La ciudad se siente viva y la historia te atrapa desde el principio.",
+    "comentario2": "Amo personalizar a mi personaje y perderme en Night City, aunque a veces me distraigo más sacando fotos que haciendo misiones"
+  },
   {
     "id": 2,
     "nombre": "Elden Ring",
-    "descripcion": "Juego2",
+    "descripcion": "Aventura de acción y fantasía con combates desafiantes y un vasto mundo abierto.",
     "precio": 30000,
-    "genero": "RPG",
-    "imagen": "elden_ring"
+    "genero": "RPG / Fantasía",
+    "imagen": "elden_ring",
+    "imagend1": "ed1",
+    "imagend2": "ed2",
+    "valoracion": 94,
+    "descripcionlarga": "Embárcate en una épica aventura a través de las Tierras Intermedias, un mundo vasto y lleno de secretos, diseñado por FromSoftware junto a George R. R. Martin. Juega como el Tiznado, un guerrero en busca del poder del Círculo de Elden. Combina exploración libre, combates intensos y jefes imponentes en una experiencia desafiante que recompensa la habilidad, la curiosidad y la estrategia.",
+    "comentario1": "El mundo es enorme y cada rincón tiene algo que descubrir. Morí mil veces, pero cada victoria vale la pena",
+    "comentario2": "Es frustrante y hermoso al mismo tiempo. No hay nada como vencer a un jefe después de intentarlo veinte veces"
   },
   {
     "id": 3,
     "nombre": "Minecraft",
-    "descripcion": "Juego3",
+    "descripcion": "Juego de construcción y exploración con bloques, donde puedes crear, sobrevivir y explorar libremente.",
     "precio": 10000,
     "genero": "Aventura",
-    "imagen": "maicra"
+    "imagen": "maicra",
+    "imagend1": "mine1",
+    "imagend2": "mine2",
+    "valoracion": 93,
+    "descripcionlarga": "Descubre un mundo infinito hecho de bloques donde la creatividad no tiene límites. En Minecraft, puedes construir, explorar y sobrevivir en entornos generados de forma aleatoria. Recolecta recursos, enfréntate a criaturas, crea estructuras únicas o disfruta del modo creativo para dar vida a tus ideas sin restricciones. Su estilo visual icónico y su libertad total lo convierten en una experiencia única para jugadores de todas las edades",
+    "comentario1": "Juego desde chico y todavía me sorprende todo lo que se puede construir. Es infinito",
+    "comentario2": "Nada mejor que jugar con amigos, perderse en cuevas y luego construir una base gigante en medio del mapa"
   },
   {
     "id": 4,
     "nombre": "Grand theft auto V",
-    "descripcion": "Juego4",
+    "descripcion": "Mundo abierto donde sigues la vida de tres criminales en Los Santos, con acción y libertad total.",
     "precio": 15000,
     "genero": "Accion",
-    "imagen": "gta5"
+    "imagen": "gta5",
+    "imagend1": "gta1",
+    "imagend2": "gta2",
+    "valoracion": 97,
+    "descripcionlarga": "Vive una historia llena de acción en Los Santos, una ciudad inspirada en Los Ángeles. Controla a Michael, Franklin y Trevor, tres personajes con estilos de vida y motivaciones distintas, que se unen para realizar arriesgados atracos. Disfruta de una narrativa cinematográfica, un mundo abierto lleno de actividades y el modo en línea GTA Online, donde la diversión y el caos nunca terminan.",
+    "comentario1": "La historia de los tres personajes es brutal. Cada uno tiene su estilo y los diálogos son una joya.",
+    "comentario2": "En GTA Online puedes hacer de todo: carreras, misiones, caos total... siempre hay algo divertido que hacer"
   }
 ]
