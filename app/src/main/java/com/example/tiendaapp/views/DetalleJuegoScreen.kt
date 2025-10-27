@@ -1,5 +1,6 @@
 package com.example.tiendaapp.views
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -18,6 +19,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import com.example.tiendaapp.viewmodel.JuegoViewModel
@@ -37,12 +40,15 @@ fun DetalleJuegoScreen(juegoId: Int, viewModel: JuegoViewModel) {
                     .padding(16.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                AsyncImage(
-                    model = juego.imagen,
-                    contentDescription = "Imagen de ${juego.nombre}",
+                val context = LocalContext.current
+                val resourceId = context.resources.getIdentifier(juego.imagen, "drawable", context.packageName)
+
+                Image(
+                    painter = painterResource(id = resourceId),
+                    contentDescription = "Poster de ${juego.nombre}",
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(200.dp),
+                        .height(300.dp),
                     contentScale = ContentScale.Crop
                 )
                 Text(p.nombre, style = MaterialTheme.typography.titleLarge)

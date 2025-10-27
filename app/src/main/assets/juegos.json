@@ -5,15 +5,14 @@
     "descripcion": "Juego1",
     "precio": 30000,
     "genero": "Accion",
-    "imagen": "https://en.wikipedia.org/wiki/Cyberpunk_2077"
-  },
+    "imagen": "cyberpunk_2077"  },
   {
     "id": 2,
     "nombre": "Elden Ring",
     "descripcion": "Juego2",
     "precio": 30000,
     "genero": "RPG",
-    "imagen": "https://www.imdb.com/es-es/title/tt10562854/"
+    "imagen": "elden_ring"
   },
   {
     "id": 3,
@@ -21,7 +20,7 @@
     "descripcion": "Juego3",
     "precio": 10000,
     "genero": "Aventura",
-    "imagen": "https://www.ign.com/games/minecraft"
+    "imagen": "maicra"
   },
   {
     "id": 4,
@@ -29,6 +28,6 @@
     "descripcion": "Juego4",
     "precio": 15000,
     "genero": "Accion",
-    "imagen": "https://gta.fandom.com/es/wiki/Grand_Theft_Auto_V"
+    "imagen": "gta5"
   }
 ]
