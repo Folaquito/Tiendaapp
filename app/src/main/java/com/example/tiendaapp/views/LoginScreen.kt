@@ -35,5 +35,10 @@ fun LoginScreen(navController: NavController, viewModel: LoginViewModel) {
         }
 
         Text(viewModel.mensaje.value, modifier = Modifier.padding(top = 10.dp))
+
+        Spacer(modifier = Modifier.height(24.dp))
+        TextButton(onClick = { navController.navigate("backoffice") }) {
+            Text("Acceso Back Office")
+        }
     }
 }

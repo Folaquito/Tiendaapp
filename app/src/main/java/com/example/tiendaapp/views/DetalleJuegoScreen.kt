@@ -27,11 +27,18 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavController
+import com.example.tiendaapp.viewmodel.CartViewModel
 import com.example.tiendaapp.viewmodel.JuegoViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun DetalleJuegoScreen(juegoId: Int, viewModel: JuegoViewModel) {
+fun DetalleJuegoScreen(
+    navController: NavController,
+    juegoId: Int,
+    viewModel: JuegoViewModel,
+    cartViewModel: CartViewModel
+) {
     val juego = remember { viewModel.buscarProductoPorId(juegoId) }
 
     Scaffold(topBar = {
@@ -88,7 +95,10 @@ fun DetalleJuegoScreen(juegoId: Int, viewModel: JuegoViewModel) {
                 }
                 item{
                     Button(
-                        onClick = { /* TODO: agregar al carrito */ },
+                        onClick = {
+                            cartViewModel.agregarAlCarrito(p)
+                            navController.navigate("carrito")
+                        },
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         Text("Agregar al carrito")
