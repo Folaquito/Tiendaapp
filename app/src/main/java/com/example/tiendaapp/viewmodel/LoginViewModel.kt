@@ -36,7 +36,7 @@ class LoginViewModel : ViewModel() {
     }
     private fun limpiarRut(rut: String): Pair<String, Char>? {
         val rutLimpio = rut.replace(Regex("[.\\s-]"), "")
-        if (rutLimpio.length < 2) return null
+        if (rutLimpio.length < 9) return null
         val cuerpo = rutLimpio.substring(0, rutLimpio.length - 1)
         val dvChar = rutLimpio.last().uppercaseChar()
         if (!cuerpo.matches(Regex("\\d+"))) return null
