@@ -1,3 +1,5 @@
+import com.android.build.gradle.internal.cxx.configure.gradleLocalProperties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -9,6 +11,17 @@ android {
     namespace = "com.example.tiendaapp"
     compileSdk = 36
 
+    signingConfigs {
+        create("release") {
+            val keystorePath = (project.findProperty("RELEASE_STORE_FILE") as String?)
+                ?: "keystore/tiendaapp-release.jks"
+            storeFile = file(keystorePath)
+            storePassword = project.findProperty("RELEASE_STORE_PASSWORD") as String? ?: "****"
+            keyAlias = project.findProperty("RELEASE_KEY_ALIAS") as String? ?: "tiendaapp"
+            keyPassword = project.findProperty("RELEASE_KEY_PASSWORD") as String? ?: "****"
+        }
+    }
+
     defaultConfig {
         applicationId = "com.example.tiendaapp"
         minSdk = 24
@@ -17,6 +30,10 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        buildConfigField("String", "MICROSERVICE_BASE_URL", "\"http://10.0.2.2:8081/\"")
+
+        val rawgApiKey = gradleLocalProperties(rootDir, providers).getProperty("RAWG_API_KEY") ?: ""
+        buildConfigField("String", "RAWG_API_KEY", "\"$rawgApiKey\"")
     }
 
     buildTypes {
@@ -26,6 +43,7 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+            signingConfig = signingConfigs.getByName("release")
         }
     }
     compileOptions {
@@ -37,6 +55,7 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 }
 
@@ -57,10 +76,14 @@ dependencies {
     implementation(libs.androidx.compose.material3)
     implementation(libs.androidx.compose.runtime)
     testImplementation(libs.junit)
+    testImplementation("io.mockk:mockk:1.13.12")
+    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.8.1")
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(libs.androidx.ui.test.junit4)
+    androidTestImplementation("androidx.navigation:navigation-testing:2.7.7")
+    androidTestImplementation("androidx.test:core-ktx:1.5.0")
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
     implementation(libs.androidx.compose.material.icons.extended)
@@ -78,7 +101,7 @@ dependencies {
     implementation("androidx.room:room-ktx:2.6.1")
 
     // Procesador de anotaciones Room
-    ksp("androidx.room:room-compiler:2.5.0")
+    ksp("androidx.room:room-compiler:2.6.1")
 
     // Coil
     implementation("io.coil-kt:coil:2.5.0")
