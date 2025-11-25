@@ -12,9 +12,13 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.example.tiendaapp.data.local.AppDatabase
+import com.example.tiendaapp.data.remote.RetrofitClient
+import com.example.tiendaapp.repository.JuegoRepository
 import com.example.tiendaapp.ui.theme.TiendaappTheme
 import com.example.tiendaapp.viewmodel.CartViewModel
 import com.example.tiendaapp.viewmodel.JuegoViewModel
+import com.example.tiendaapp.viewmodel.JuegoViewModelFactory
 import com.example.tiendaapp.viewmodel.LoginViewModel
 import com.example.tiendaapp.views.AddProductScreen
 import com.example.tiendaapp.views.BackOfficeScreen
@@ -31,11 +35,17 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+        val database = AppDatabase.getDatabase(applicationContext)
+        val api = RetrofitClient.apiService
+        val repository = JuegoRepository(api, database.juegoDao())
+        val viewModelFactory = JuegoViewModelFactory(repository)
         setContent {
             val navController = rememberNavController()
             val viewModel: LoginViewModel = viewModel()
-            val juegoViewModel: JuegoViewModel = viewModel()
             val cartViewModel: CartViewModel = viewModel()
+            val juegoViewModel: JuegoViewModel = viewModel(
+                factory = viewModelFactory
+            )
 
             NavHost(navController, startDestination = "register") {
                 composable("register") {
@@ -49,7 +59,11 @@ class MainActivity : ComponentActivity() {
                     HomeScreen(email, navController)
                 }
                 composable("catalogo") {
-                    CatalogoScreen(navController = navController, juegoViewModel = juegoViewModel)
+                    CatalogoScreen(
+                        navController = navController,
+                        gamesViewModel = juegoViewModel,
+                        cartViewModel = cartViewModel
+                    )
                 }
                 composable("detalle/{juegoId}") { backStack ->
                     val id = backStack.arguments?.getString("juegoId")?.toIntOrNull() ?: -1

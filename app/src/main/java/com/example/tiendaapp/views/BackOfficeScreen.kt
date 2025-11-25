@@ -29,15 +29,17 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
-import com.example.tiendaapp.model.Juego
+import com.example.tiendaapp.Helper.toClp
+import com.example.tiendaapp.model.JuegoEntity
 import com.example.tiendaapp.viewmodel.JuegoViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun BackOfficeScreen(navController: NavController, juegoViewModel: JuegoViewModel) {
-    val juegos by juegoViewModel.juegos.collectAsState()
+    val juegos by juegoViewModel.games.collectAsState()
 
     Scaffold(
         topBar = {
@@ -70,10 +72,11 @@ fun BackOfficeScreen(navController: NavController, juegoViewModel: JuegoViewMode
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             Text(
-                text = "Gestión de productos",
+                text = "Gestión de productos (Local)",
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold
             )
+
             LazyColumn(
                 modifier = Modifier.weight(1f),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
@@ -82,6 +85,7 @@ fun BackOfficeScreen(navController: NavController, juegoViewModel: JuegoViewMode
                     BackOfficeItem(juego)
                 }
             }
+
             OutlinedButton(
                 modifier = Modifier.fillMaxWidth(),
                 onClick = { navController.navigate("catalogo") }
@@ -93,7 +97,7 @@ fun BackOfficeScreen(navController: NavController, juegoViewModel: JuegoViewMode
 }
 
 @Composable
-private fun BackOfficeItem(juego: Juego) {
+private fun BackOfficeItem(juego: JuegoEntity) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
@@ -104,26 +108,52 @@ private fun BackOfficeItem(juego: Juego) {
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(juego.nombre, fontWeight = FontWeight.Bold)
-                Text("Estado: Activo", color = MaterialTheme.colorScheme.primary)
+
+                Text(
+                    text = juego.name,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.weight(1f)
+                )
+
+                Text(
+                    text = "Activo",
+                    color = MaterialTheme.colorScheme.primary,
+                    style = MaterialTheme.typography.labelMedium
+                )
             }
+
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Text("Precio: $${juego.precio}")
-                Text("Género: ${juego.genero}")
+
+                Text(
+                    text = "Precio: ${juego.price.toClp()}",
+                    fontWeight = FontWeight.Medium
+                )
+
+                Text("Rating: ⭐ ${juego.rating}")
             }
-            Text("Descripción: ${juego.descripcion}")
+
+            Text(
+                text = "Desc: ${juego.description ?: "Sin descripción detallada descargada"}",
+                style = MaterialTheme.typography.bodySmall,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis
+            )
+
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                Button(onClick = { /* Visual solamente */ }, modifier = Modifier.weight(1f)) {
+                Button(onClick = { /* Lógica futura de editar */ }, modifier = Modifier.weight(1f)) {
                     Text("Editar")
                 }
-                OutlinedButton(onClick = { /* Visual solamente */ }, modifier = Modifier.weight(1f)) {
-                    Text("Desactivar")
+                OutlinedButton(
+                    onClick = { /* Lógica futura de borrar de Room */ },
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Text("Eliminar")
                 }
             }
         }

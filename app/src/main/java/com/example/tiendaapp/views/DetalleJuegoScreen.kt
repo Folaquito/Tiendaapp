@@ -1,33 +1,21 @@
 package com.example.tiendaapp.views
 
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.Button
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AddShoppingCart
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontStyle
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import coil.compose.AsyncImage
+import com.example.tiendaapp.Helper.toClp
 import com.example.tiendaapp.viewmodel.CartViewModel
 import com.example.tiendaapp.viewmodel.JuegoViewModel
 
@@ -39,12 +27,25 @@ fun DetalleJuegoScreen(
     viewModel: JuegoViewModel,
     cartViewModel: CartViewModel
 ) {
-    val juego = remember { viewModel.buscarProductoPorId(juegoId) }
+    LaunchedEffect(juegoId) {
+        viewModel.loadDescription(juegoId)
+    }
 
-    Scaffold(topBar = {
-        TopAppBar(title = { Text(juego?.nombre ?: "Detalle") })
-    }) { padding ->
-        juego?.let { p ->
+    val juegoState by viewModel.getGameFlow(juegoId).collectAsState(initial = null)
+    val juego = juegoState
+
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text(juego?.name ?: "Cargando...") },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.primaryContainer,
+                    titleContentColor = MaterialTheme.colorScheme.primary
+                )
+            )
+        }
+    ) { padding ->
+        if (juego != null) {
             LazyColumn(
                 modifier = Modifier
                     .fillMaxSize()
@@ -52,75 +53,114 @@ fun DetalleJuegoScreen(
                 contentPadding = PaddingValues(16.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                item{
-                    val context = LocalContext.current
-                    val resourceId = context.resources.getIdentifier(juego.imagen, "drawable", context.packageName)
-                    Image(
-                        painter = painterResource(id = resourceId),
-                        contentDescription = "Carátula de ${juego.nombre}",
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(250.dp),
-                        )
-                }
-                item{
-                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)){
-                        val context = LocalContext.current
-                        val imgD1Id = context.resources.getIdentifier(p.imagend1, "drawable", context.packageName)
-                        Image(
-                            painter = painterResource(id = imgD1Id),
-                            contentDescription = "Imagen extra de ${p.nombre}",
+                item {
+                    Card(
+                        elevation = CardDefaults.cardElevation(4.dp),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        AsyncImage(
+                            model = juego.imageUrl,
+                            contentDescription = "Carátula de ${juego.name}",
                             modifier = Modifier
-                                .weight(1f)
-                                .height(120.dp)
-                        )
-                        val imgD2Id = context.resources.getIdentifier(p.imagend2, "drawable", context.packageName)
-                        Image(
-                            painter = painterResource(id = imgD2Id),
-                            contentDescription = "Imagen extra de ${p.nombre}",
-                            modifier = Modifier
-                                .weight(1f)
-                                .height(120.dp)
+                                .fillMaxWidth()
+                                .height(250.dp),
+                            contentScale = ContentScale.Crop
                         )
                     }
                 }
-                item{
-                    Text(p.nombre, style = MaterialTheme.typography.titleLarge)
-                    Text("$${p.precio}", style = MaterialTheme.typography.titleMedium)
-                    Text(p.genero ?: "", style = MaterialTheme.typography.bodyMedium)
-                    Text("Metacritic: ${p.valoracion}", style = MaterialTheme.typography.titleMedium)
+
+                item {
+                    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                        Text(
+                            text = juego.name,
+                            style = MaterialTheme.typography.headlineSmall,
+                            fontWeight = FontWeight.Bold
+                        )
+
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = juego.price.toClp(),
+                                style = MaterialTheme.typography.titleLarge,
+                                color = MaterialTheme.colorScheme.primary,
+                                fontWeight = FontWeight.Bold
+                            )
+
+                            Surface(
+                                color = MaterialTheme.colorScheme.secondaryContainer,
+                                shape = MaterialTheme.shapes.small
+                            ) {
+                                Text(
+                                    text = "Metacritic: ${juego.rating}",
+                                    style = MaterialTheme.typography.labelLarge,
+                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                                    color = MaterialTheme.colorScheme.onSecondaryContainer
+                                )
+                            }
+                        }
+                    }
                 }
-                item{
-                    Text(p.descripcionlarga ?: "", style = MaterialTheme.typography.bodyMedium)
+
+                item {
+                    Text("Descripción", style = MaterialTheme.typography.titleMedium)
+                    Spacer(modifier = Modifier.height(4.dp))
+
+                    if (juego.description != null) {
+                        Text(
+                            text = juego.description, // ¡Aquí está tu descripción real!
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                    } else {
+                        CircularProgressIndicator(modifier = Modifier.size(24.dp))
+                        Text("Cargando descripción...", style = MaterialTheme.typography.bodySmall)
+                    }
                 }
-                item{
+
+                item {
                     Button(
                         onClick = {
-                            cartViewModel.agregarAlCarrito(p)
+                            cartViewModel.agregarAlCarrito(juego)
                             navController.navigate("carrito")
                         },
-                        modifier = Modifier.fillMaxWidth()
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(50.dp)
                     ) {
+                        Icon(Icons.Default.AddShoppingCart, contentDescription = null)
+                        Spacer(Modifier.width(8.dp))
                         Text("Agregar al carrito")
                     }
                 }
+
                 item {
+                    Spacer(modifier = Modifier.height(8.dp))
                     Text(
                         "Comentarios de la comunidad",
-                        style = MaterialTheme.typography.titleLarge,
-                        modifier = Modifier.padding(top = 8.dp)
+                        style = MaterialTheme.typography.titleLarge
                     )
                 }
-                val comentarios = listOf(p.comentario1, p.comentario2).filter { it.isNotBlank() }
-                items(comentarios) { comentario ->
+
+                val comentariosSimulados = listOf(
+                    "¡Increíble juego, totalmente recomendado!",
+                    "Los gráficos son espectaculares en esta versión.",
+                    "El precio vale totalmente la pena."
+                )
+
+                items(comentariosSimulados) { comentario ->
                     ComentarioCardSimple(texto = comentario)
                 }
             }
-        } ?: Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            Text("Producto no encontrado")
+        } else {
+            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                CircularProgressIndicator()
+            }
         }
     }
 }
+
 @Composable
 fun ComentarioCardSimple(texto: String) {
     Card(
@@ -131,7 +171,7 @@ fun ComentarioCardSimple(texto: String) {
     ) {
         Text(
             text = "\"$texto\"",
-            modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
+            modifier = Modifier.padding(16.dp),
             style = MaterialTheme.typography.bodyMedium,
             fontStyle = FontStyle.Italic
         )

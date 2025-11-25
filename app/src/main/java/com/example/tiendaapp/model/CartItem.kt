@@ -1,6 +1,6 @@
 package com.example.tiendaapp.model
 
 data class CartItem(
-    val juego: Juego,
+    val game: JuegoEntity,
     val cantidad: Int = 1
 )

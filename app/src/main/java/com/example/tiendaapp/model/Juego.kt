@@ -1,16 +1,19 @@
 package com.example.tiendaapp.model
 
+import com.google.gson.annotations.SerializedName
+
+data class GameResponse(
+    @SerializedName("results")
+    val results: List<Juego>
+)
+
 data class Juego(
+    @SerializedName("id")
     val id: Int,
-    val nombre: String,
-    val descripcion: String,
-    val precio: Int,
-    val genero: String,
-    val imagen: String,
-    val imagend1: String,
-    val imagend2: String,
-    val valoracion: Int,
-    val descripcionlarga: String,
-    val comentario1: String,
-    val comentario2: String
+    @SerializedName("name")
+    val name: String,
+    @SerializedName("background_image")
+    val backgroundImage: String?,
+    @SerializedName("rating")
+    val rating: Double
 )

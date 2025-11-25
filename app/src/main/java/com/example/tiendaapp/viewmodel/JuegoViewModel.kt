@@ -1,27 +1,42 @@
 package com.example.tiendaapp.viewmodel
 
-import android.app.Application
-import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.tiendaapp.model.Juego
+import com.example.tiendaapp.model.JuegoEntity
 import com.example.tiendaapp.repository.JuegoRepository
-import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
-class JuegoViewModel(application: Application) : AndroidViewModel(application) {
-    private val repository = JuegoRepository(application.applicationContext)
-    private val _juegos = MutableStateFlow<List<Juego>>(emptyList())
-    val juegos: StateFlow<List<Juego>> = _juegos.asStateFlow()
+class JuegoViewModel(
+    private val repository: JuegoRepository
+) : ViewModel() {
+
+    val games: StateFlow<List<JuegoEntity>> = repository.games
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = emptyList()
+        )
+
     init {
-        cargarJuegos()
+        refreshData()
     }
-    private fun cargarJuegos() {
+
+    fun refreshData() {
         viewModelScope.launch {
-            _juegos.value = repository.obtenerJuegos()
+            repository.refreshGames()
         }
     }
-    fun buscarProductoPorId(id: Int): Juego? =
-        _juegos.value.find { it.id == id }
+    fun getGameFlow(id: Int): Flow<JuegoEntity?> {
+        return repository.getGameById(id)
+    }
+
+    fun loadDescription(id: Int) {
+        viewModelScope.launch {
+            repository.fetchGameDescription(id)
+        }
+    }
 }
