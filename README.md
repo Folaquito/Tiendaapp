@@ -25,7 +25,7 @@ Aplicación Android de una tienda de videojuegos desarrollada con Kotlin + Jetpa
 	- `DELETE /{id}` eliminar producto.
 4. La BD H2 se inicializa con datos (`data.sql`). Puede ver la consola en `http://localhost:8081/h2-console`.
 
-## API externa RAWG (IE 3.1.4)
+## API externa RAWG
 - Cree una cuenta en [https://rawg.io/apidocs](https://rawg.io/apidocs) y copie su API key.
 - En `local.properties` agrega `RAWG_API_KEY=Llave` (no se versiona).
 - El `JuegoRepository` usa esa key para descargar descripciones. Si falta, la app mostrará un mensaje.
