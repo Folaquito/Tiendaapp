@@ -13,6 +13,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.tiendaapp.data.local.AppDatabase
+import com.example.tiendaapp.data.remote.MicroserviceClient
 import com.example.tiendaapp.data.remote.RetrofitClient
 import com.example.tiendaapp.repository.JuegoRepository
 import com.example.tiendaapp.ui.theme.TiendaappTheme
@@ -37,7 +38,8 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         val database = AppDatabase.getDatabase(applicationContext)
         val api = RetrofitClient.apiService
-        val repository = JuegoRepository(api, database.juegoDao())
+        val microserviceApi = MicroserviceClient.api
+        val repository = JuegoRepository(api, microserviceApi, database.juegoDao())
         val viewModelFactory = JuegoViewModelFactory(repository)
         setContent {
             val navController = rememberNavController()
@@ -82,7 +84,7 @@ class MainActivity : ComponentActivity() {
                     BackOfficeScreen(navController, juegoViewModel)
                 }
                 composable("backoffice/agregar") {
-                    AddProductScreen(navController)
+                    AddProductScreen(navController, juegoViewModel)
                 }
             }
         }

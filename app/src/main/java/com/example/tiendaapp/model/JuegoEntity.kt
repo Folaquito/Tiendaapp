@@ -11,5 +11,6 @@ data class JuegoEntity(
     val imageUrl: String,
     val rating: Double,
     val price: Int,
+    val stock: Int = 0,
     val description: String? = null
 )
