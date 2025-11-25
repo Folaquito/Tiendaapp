@@ -1,7 +1,6 @@
 package com.example.tiendaapp.views
 
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -18,13 +17,24 @@ fun RegisterScreen(navController: NavController, viewModel: LoginViewModel) {
     var direccion by remember { mutableStateOf("") }
 
     val rutErrorMessage by viewModel.rutError
+    var emailError by remember { mutableStateOf<String?>(null) }
+    var passwordError by remember { mutableStateOf<String?>(null) }
+
+    fun validarEmail(input: String): Boolean {
+        val regex = "^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+$".toRegex()
+        return regex.matches(input)
+    }
+
+    fun validarPassword(input: String): Boolean = input.length >= 6
 
     val isButtonEnabled = nombre.isNotBlank() &&
             email.isNotBlank() &&
             password.isNotBlank() &&
             rut.isNotBlank() &&
             direccion.isNotBlank() &&
-            rutErrorMessage == null
+            rutErrorMessage == null &&
+            emailError == null &&
+            passwordError == null
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -40,13 +50,35 @@ fun RegisterScreen(navController: NavController, viewModel: LoginViewModel) {
         )
         OutlinedTextField(
             value = email,
-            onValueChange = { email = it },
-            label = { Text("Email") }
+            onValueChange = {
+                email = it
+                emailError = when {
+                    it.isBlank() -> "El correo es obligatorio"
+                    !validarEmail(it) -> "Formato de correo inválido"
+                    else -> null
+                }
+            },
+            label = { Text("Email") },
+            isError = emailError != null,
+            supportingText = {
+                emailError?.let { Text(it) }
+            }
         )
         OutlinedTextField(
             value = password,
-            onValueChange = { password = it },
-            label = { Text("Contraseña") }
+            onValueChange = {
+                password = it
+                passwordError = when {
+                    it.isBlank() -> "La contraseña es obligatoria"
+                    !validarPassword(it) -> "Debe tener al menos 6 caracteres"
+                    else -> null
+                }
+            },
+            label = { Text("Contraseña") },
+            isError = passwordError != null,
+            supportingText = {
+                passwordError?.let { Text(it) }
+            }
         )
 
         OutlinedTextField(
