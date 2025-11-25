@@ -12,6 +12,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -40,6 +41,8 @@ import com.example.tiendaapp.viewmodel.JuegoViewModel
 @Composable
 fun BackOfficeScreen(navController: NavController, juegoViewModel: JuegoViewModel) {
     val juegos by juegoViewModel.games.collectAsState()
+    val mensaje by juegoViewModel.backOfficeMessage.collectAsState()
+    val isOperating by juegoViewModel.isOperating.collectAsState()
 
     Scaffold(
         topBar = {
@@ -77,12 +80,26 @@ fun BackOfficeScreen(navController: NavController, juegoViewModel: JuegoViewMode
                 fontWeight = FontWeight.Bold
             )
 
+            if (isOperating) {
+                CircularProgressIndicator(modifier = Modifier.align(Alignment.CenterHorizontally))
+            }
+
+            mensaje?.let {
+                Text(
+                    text = it,
+                    color = if (it.contains("error", ignoreCase = true)) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary
+                )
+            }
+
             LazyColumn(
                 modifier = Modifier.weight(1f),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 items(juegos, key = { it.id }) { juego ->
-                    BackOfficeItem(juego)
+                    BackOfficeItem(
+                        juego = juego,
+                        onDelete = { juegoViewModel.eliminarProducto(juego.id) }
+                    )
                 }
             }
 
@@ -97,7 +114,10 @@ fun BackOfficeScreen(navController: NavController, juegoViewModel: JuegoViewMode
 }
 
 @Composable
-private fun BackOfficeItem(juego: JuegoEntity) {
+private fun BackOfficeItem(
+    juego: JuegoEntity,
+    onDelete: () -> Unit
+) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
@@ -150,7 +170,7 @@ private fun BackOfficeItem(juego: JuegoEntity) {
                     Text("Editar")
                 }
                 OutlinedButton(
-                    onClick = { /* Lógica futura de borrar de Room */ },
+                    onClick = onDelete,
                     modifier = Modifier.weight(1f)
                 ) {
                     Text("Eliminar")

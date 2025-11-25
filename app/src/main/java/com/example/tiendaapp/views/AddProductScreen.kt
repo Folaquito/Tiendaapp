@@ -7,12 +7,14 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -23,6 +25,8 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -30,17 +34,20 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import com.example.tiendaapp.viewmodel.JuegoViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AddProductScreen(navController: NavController) {
+fun AddProductScreen(navController: NavController, juegoViewModel: JuegoViewModel) {
     val nombre = remember { mutableStateOf("") }
     val precio = remember { mutableStateOf("") }
-    val plataforma = remember { mutableStateOf("") }
-    val genero = remember { mutableStateOf("") }
+    val imagenUrl = remember { mutableStateOf("") }
+    val valoracion = remember { mutableStateOf("4.5") }
     val descripcion = remember { mutableStateOf("") }
     val stock = remember { mutableStateOf("") }
     val mensaje = remember { mutableStateOf("") }
+    val estadoMensaje by juegoViewModel.backOfficeMessage.collectAsState()
+    val isLoading by juegoViewModel.isOperating.collectAsState()
 
     Scaffold(
         topBar = {
@@ -70,8 +77,8 @@ fun AddProductScreen(navController: NavController) {
             UploadBox()
             ProductField(label = "Nombre del juego", value = nombre.value) { nombre.value = it }
             ProductField(label = "Precio (CLP)", value = precio.value) { precio.value = it }
-            ProductField(label = "Plataforma", value = plataforma.value) { plataforma.value = it }
-            ProductField(label = "Género", value = genero.value) { genero.value = it }
+            ProductField(label = "URL de imagen", value = imagenUrl.value) { imagenUrl.value = it }
+            ProductField(label = "Valoración (0.0 - 5.0)", value = valoracion.value) { valoracion.value = it }
             ProductField(
                 label = "Descripción",
                 value = descripcion.value,
@@ -82,21 +89,47 @@ fun AddProductScreen(navController: NavController) {
             Button(
                 modifier = Modifier.fillMaxWidth(),
                 onClick = {
-                    val campos = listOf(nombre.value, precio.value, plataforma.value, genero.value, descripcion.value, stock.value)
+                    val campos = listOf(nombre.value, precio.value, imagenUrl.value, valoracion.value, descripcion.value, stock.value)
                     val todosCompletos = campos.all { it.isNotBlank() }
-                    mensaje.value = if (todosCompletos) {
-                        "Producto guardado (vista demostrativa)"
-                    } else {
-                        "Completa todos los campos para continuar"
+                    if (!todosCompletos) {
+                        mensaje.value = "Completa todos los campos para continuar"
+                        return@Button
                     }
-                }
+                    val precioInt = precio.value.toIntOrNull()
+                    val stockInt = stock.value.toIntOrNull()
+                    val ratingDouble = valoracion.value.toDoubleOrNull()
+                    if (precioInt == null || stockInt == null || ratingDouble == null) {
+                        mensaje.value = "Revisa los campos numéricos (precio, valoración y stock)"
+                        return@Button
+                    }
+                    mensaje.value = ""
+                    juegoViewModel.crearProducto(
+                        nombre = nombre.value,
+                        descripcion = descripcion.value,
+                        imagen = imagenUrl.value,
+                        precio = precioInt,
+                        valoracion = ratingDouble.coerceIn(0.0, 5.0),
+                        stock = stockInt
+                    )
+                },
+                enabled = !isLoading
             ) {
-                Text("Guardar producto")
+                if (isLoading) {
+                    CircularProgressIndicator(modifier = Modifier.size(18.dp))
+                } else {
+                    Text("Guardar producto")
+                }
             }
             if (mensaje.value.isNotBlank()) {
                 Text(
                     text = mensaje.value,
                     color = if (mensaje.value.startsWith("Producto")) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error
+                )
+            }
+            estadoMensaje?.let {
+                Text(
+                    text = it,
+                    color = if (it.contains("error", ignoreCase = true)) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary
                 )
             }
         }
