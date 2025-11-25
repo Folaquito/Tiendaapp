@@ -2,7 +2,6 @@ package com.example.tiendaapp.views
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -28,7 +27,7 @@ import androidx.compose.material.icons.filled.Refresh
 fun CatalogoScreen(
     navController: NavController,
     gamesViewModel: JuegoViewModel,
-    cartViewModel: CartViewModel
+    cartViewModel: CartViewModel,
 ) {
 
     val juegos by gamesViewModel.games.collectAsState()
@@ -57,8 +56,22 @@ fun CatalogoScreen(
                 ExternalApiSection(
                     externalGames = externos,
                     errorMessage = externalError,
-                    onRetry = { gamesViewModel.loadExternalGames() }
+                    onRetry = { gamesViewModel.loadExternalGames() },
+                    onGameClick = { juegoId ->
+                        navController.navigate("detalle/$juegoId")
+                    }
                 )
+            }
+
+            if (juegos.isNotEmpty()) {
+                item {
+                    Text(
+                        text = "Todos los juegos",
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.padding(vertical = 8.dp)
+                    )
+                }
             }
 
             items(juegos, key = { it.id }) { juego ->
@@ -75,6 +88,7 @@ fun CatalogoScreen(
         }
     }
 }
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun JuegoCard(
@@ -146,7 +160,8 @@ fun JuegoCard(
 private fun ExternalApiSection(
     externalGames: List<JuegoEntity>,
     errorMessage: String?,
-    onRetry: () -> Unit
+    onRetry: () -> Unit,
+    onGameClick: (Int) -> Unit
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -166,9 +181,12 @@ private fun ExternalApiSection(
 
             when {
                 externalGames.isNotEmpty() -> {
-                    LazyRow(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                        items(externalGames, key = { it.id }) { juego ->
-                            ExternalGameCard(juego)
+                    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                        externalGames.forEach { juego ->
+                            ExternalGameCard(
+                                juego = juego,
+                                onClick = { onGameClick(juego.id) } // Pasamos el click
+                            )
                         }
                     }
                 }
@@ -187,32 +205,40 @@ private fun ExternalApiSection(
 
                 else -> {
                     Text("Cargando recomendaciones...")
+                    LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
                 }
             }
         }
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun ExternalGameCard(juego: JuegoEntity) {
+private fun ExternalGameCard(
+    juego: JuegoEntity,
+    onClick: () -> Unit
+) {
     Card(
+        onClick = onClick,
         modifier = Modifier
-            .width(180.dp),
+            .fillMaxWidth(),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
-        Column {
+        Row(
+            verticalAlignment = Alignment.CenterVertically
+        ) {
             AsyncImage(
                 model = juego.imageUrl,
                 contentDescription = juego.name,
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .height(120.dp),
+                    .width(100.dp)
+                    .height(80.dp),
                 contentScale = ContentScale.Crop
             )
             Column(modifier = Modifier.padding(12.dp)) {
                 Text(
                     text = juego.name,
-                    style = MaterialTheme.typography.bodyMedium,
+                    style = MaterialTheme.typography.titleMedium,
                     maxLines = 2
                 )
                 Spacer(modifier = Modifier.height(4.dp))
