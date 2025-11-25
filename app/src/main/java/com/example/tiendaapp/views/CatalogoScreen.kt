@@ -159,13 +159,9 @@ private fun ExternalApiSection(
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             Text(
-                text = "Recomendados desde RAWG (API externa)",
+                text = "Recomendaciones destacadas",
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold
-            )
-            Text(
-                text = "Se muestran solo a modo informativo y se obtienen en vivo desde la API pública RAWG.io.",
-                style = MaterialTheme.typography.bodyMedium
             )
 
             when {
@@ -190,9 +186,7 @@ private fun ExternalApiSection(
                 }
 
                 else -> {
-                    CircularProgressIndicator(
-                        modifier = Modifier.align(Alignment.CenterHorizontally)
-                    )
+                    Text("Cargando recomendaciones...")
                 }
             }
         }

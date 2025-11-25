@@ -61,7 +61,7 @@ class JuegoViewModel(
                 _externalError.value = null
                 _externalGames.value = repository.fetchExternalGames(limit)
             } catch (e: Exception) {
-                _externalError.value = e.message ?: "No se pudo cargar la API externa"
+                _externalError.value = e.message ?: "No se pudieron cargar las recomendaciones"
             }
         }
     }
