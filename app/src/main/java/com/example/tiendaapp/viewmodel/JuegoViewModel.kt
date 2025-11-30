@@ -9,6 +9,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.flow.MutableStateFlow
 
 class JuegoViewModel(
     private val repository: JuegoRepository
@@ -21,8 +22,12 @@ class JuegoViewModel(
             initialValue = emptyList()
         )
 
+    private val _favorites = MutableStateFlow<List<com.example.tiendaapp.data.remote.FavoriteGameDto>>(emptyList())
+    val favorites: StateFlow<List<com.example.tiendaapp.data.remote.FavoriteGameDto>> = _favorites
+
     init {
         refreshData()
+        loadFavorites()
     }
 
     fun refreshData() {
@@ -30,6 +35,31 @@ class JuegoViewModel(
             repository.refreshGames()
         }
     }
+
+    fun loadFavorites() {
+        viewModelScope.launch {
+            _favorites.value = repository.getFavorites()
+        }
+    }
+
+    fun toggleFavorite(game: JuegoEntity) {
+        viewModelScope.launch {
+            val currentFavs = _favorites.value
+            val existing = currentFavs.find { it.gameId == game.id }
+            if (existing != null) {
+                repository.removeFavorite(game.id)
+            } else {
+                val newFav = com.example.tiendaapp.data.remote.FavoriteGameDto(
+                    gameId = game.id,
+                    title = game.name,
+                    imageUrl = game.imageUrl
+                )
+                repository.addFavorite(newFav)
+            }
+            loadFavorites()
+        }
+    }
+
     fun getGameFlow(id: Int): Flow<JuegoEntity?> {
         return repository.getGameById(id)
     }
@@ -37,6 +67,13 @@ class JuegoViewModel(
     fun loadDescription(id: Int) {
         viewModelScope.launch {
             repository.fetchGameDescription(id)
+        }
+    }
+
+    fun updateNote(gameId: Int, note: String) {
+        viewModelScope.launch {
+            repository.updateFavoriteNote(gameId, note)
+            loadFavorites()
         }
     }
 }
