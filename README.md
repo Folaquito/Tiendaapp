@@ -1,50 +1,70 @@
-# Tiendaapp
+# TiendaApp - Catálogo de Juegos
 
-Aplicación Android de una tienda de videojuegos desarrollada con Kotlin + Jetpack Compose para la asignatura **DSY1105 – Desarrollo de Aplicaciones Móviles**. El proyecto cubre registro/login con validaciones, catálogo de juegos, carrito de compras y un Back Office conectado a un microservicio propio, además de que el catalogo consume la API externa RAWG.
+## 2. Integrantes
 
-## Integrantes
-- Cristopher Ricchasse
-- Joaquín Fernández
+- **Joaquin Fernandez**
+- **Cristopher Richasse**
 
-## Arquitectura y funcionalidades principales
-- **Compose + MVVM + Navigation** para todas las pantallas (registro, login, catálogo, carrito, back office, detalle, resultados de compra).
-- **Validaciones**: correos, contraseñas y RUT en registro/login con mensajes al usuario.
-- **Persistencia local**: Room (`JuegoEntity`, `JuegoDao`, `AppDatabase`) cachea el catálogo descargado.
-- **Microservicio propio** (`backend/`): CRUD de productos con Spring Boot + H2. Back Office crea y elimina productos reales.
-- **API externa RAWG**: En `CatalogoScreen` muestra juegos obtenidos en vivo y diferencia visualmente su origen.
-- **Pruebas**: unitarias para ViewModels/lógica y una prueba Compose UI básica.
+## 3. Funcionalidades
 
-## Microservicio Spring Boot
-1. Posicionese en la raíz del repositorio.
-2. Ejecute `./gradlew -p backend bootRun`.
-3. Endpoints expuestos (base `http://localhost:8081/api/productos`):
-	- `GET /` listar productos.
-	- `GET /{id}` obtener detalle.
-	- `POST /` crear producto.
-	- `PUT /{id}` actualizar producto.
-	- `DELETE /{id}` eliminar producto.
-4. La BD H2 se inicializa con datos (`data.sql`). Puede ver la consola en `http://localhost:8081/h2-console`.
+La aplicación permite explorar un catálogo de videojuegos y gestionar una lista de favoritos personalizada.
 
-## API externa RAWG
-- Cree una cuenta en [https://rawg.io/apidocs](https://rawg.io/apidocs) y copie su API key.
-- En `local.properties` agrega `RAWG_API_KEY=Llave` (no se versiona).
-- El `JuegoRepository` usa esa key para descargar descripciones. Si falta, la app mostrará un mensaje.
+- **Catálogo de Juegos**: Visualización de una lista de juegos populares obtenidos desde la API de RAWG.
+- **Detalle de Juego**: Vista detallada con descripción, imagen, valoración y precio simulado.
+- **Gestión de Favoritos (CRUD Completo)**:
+  - **Create**: Agregar juegos a la lista de favoritos.
+  - **Read**: Visualizar la lista de juegos favoritos guardados en el backend.
+  - **Update**: Agregar y editar **Notas Personales** en los juegos favoritos.
+  - **Delete**: Eliminar juegos de la lista de favoritos.
+- **Persistencia**: Los favoritos y sus notas se guardan en una base de datos H2 (archivo local) a través del microservicio Spring Boot.
 
-## Ejecución de la app
-1. **Variables locales**:
-	- `local.properties`: debe contener `sdk.dir=...` y `RAWG_API_KEY=...`.
-	- (Opcional) `gradle.properties` con credenciales de firma (ver más abajo).
-2. **Backend**: inicia el microservicio con `./gradlew -p backend bootRun`.
-3. **Aplicación Android**: ejecuta `./gradlew installDebug` o usa Android Studio/`adb` para lanzar en emulador/dispositivo.
+## 4. Endpoints Utilizados
 
-## Pruebas
-- **Unit tests** (`./gradlew test`):
-  - `CartViewModelTest` (cálculo del carrito).
-  - `LoginViewModelTest` (validación de RUT).
-  - `JuegoViewModelTest` (manejo de API externa con MockK).
-- **UI test** (`./gradlew connectedAndroidTest` con dispositivo/emulador):
-  - `RegisterScreenTest` asegura que el botón “Registrar” parte deshabilitado cuando los campos están vacíos.
+### API Externa (RAWG)
 
-## Endpoints consumidos
-- **Microservicio propio**: `http://10.0.2.2:8081/api/productos` (CRUD completo desde Back Office y catálogo principal).
-- **RAWG API externa**: `https://api.rawg.io/api/games` y `https://api.rawg.io/api/games/{id}` (descripciones extendidas).
+- `GET https://api.rawg.io/api/games`: Obtiene el listado de juegos.
+- `GET https://api.rawg.io/api/games/{id}`: Obtiene el detalle y descripción de un juego.
+
+### Microservicio Propio (Spring Boot)
+
+- `GET http://10.0.2.2:8080/favorites`: Obtiene todos los favoritos.
+- `POST http://10.0.2.2:8080/favorites`: Agrega un nuevo favorito.
+- `PUT http://10.0.2.2:8080/favorites/{gameId}`: Actualiza la nota personal de un favorito.
+- `DELETE http://10.0.2.2:8080/favorites/{gameId}`: Elimina un favorito.
+
+## 5. Pasos para Ejecutar
+
+### Requisitos Previos
+
+- Android Studio Ladybug o superior.
+- JDK 17.
+- Emulador Android configurado.
+
+### Paso 1: Iniciar el Backend
+
+El backend es necesario para la funcionalidad de favoritos.
+
+1.  Abrir una terminal en la carpeta raíz del proyecto.
+2.  Navegar a la carpeta `backend`:
+
+    cd backend
+
+3.  Ejecutar el servidor Spring Boot:
+
+    \gradlew.bat bootRun
+
+4.  Esperar a que aparezca el mensaje `Tomcat started on port 8080`.
+
+### Paso 2: Ejecutar la App Android
+
+1.  Abrir el proyecto en Android Studio (carpeta `app` o raíz).
+2.  Sincronizar Gradle.
+3.  Seleccionar el dispositivo emulador.
+4.  Presionar **Run**
+
+## 6. APK Firmado y Llave
+
+Los archivos generados para la entrega se encuentran en las siguientes rutas:
+
+- **APK Firmado**: `app/build/outputs/apk/release/app-release.apk`
+- **Keystore (.jks)**: `app/release-key.jks`

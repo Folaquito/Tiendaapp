@@ -1,27 +1,32 @@
 package com.example.tiendaapp.repository
 
 import android.util.Log
-import com.example.tiendaapp.BuildConfig
 import com.example.tiendaapp.data.local.JuegoDao
 import com.example.tiendaapp.data.remote.ApiService
-import com.example.tiendaapp.data.remote.MicroserviceApiService
+import com.example.tiendaapp.data.remote.BackendService
 import com.example.tiendaapp.model.JuegoEntity
 import com.example.tiendaapp.model.toEntity
 import kotlinx.coroutines.flow.Flow
 
 class JuegoRepository(
-    private val rawgApi: ApiService,
-    private val backendApi: MicroserviceApiService,
-    private val dao: JuegoDao
+    private val api: ApiService,
+    private val dao: JuegoDao,
+    private val backend: com.example.tiendaapp.data.remote.BackendService
 ) {
 
     val games: Flow<List<JuegoEntity>> = dao.getAllGames()
 
     suspend fun refreshGames() {
         try {
-            val backendGames = backendApi.listarProductos()
-            dao.deleteAllGames()
-            dao.insertGames(backendGames.map { it.toEntity() })
+            // NOTE: Using a placeholder key. In a real app, this should be in local.properties
+            val response = api.getGames(apiKey = "llave")
+
+            val gamesEntities = response.results.map { dto ->
+                dto.toEntity()
+            }
+
+            dao.insertGames(gamesEntities)
+
         } catch (e: Exception) {
             Log.e("GamesRepository", "Error fetching data: ${e.message}")
             e.printStackTrace()
@@ -30,10 +35,8 @@ class JuegoRepository(
     fun getGameById(id: Int): Flow<JuegoEntity?> = dao.getGameById(id)
 
     suspend fun fetchGameDescription(id: Int) {
-        if (BuildConfig.RAWG_API_KEY.isBlank()) return
-
         try {
-            val response = rawgApi.getGameDetail(id, BuildConfig.RAWG_API_KEY)
+            val response = api.getGameDetail(id, "llave")
 
             if (response.description.isNotEmpty()) {
                 dao.updateGameDescription(id, response.description)
@@ -43,56 +46,44 @@ class JuegoRepository(
         }
     }
 
-    suspend fun fetchExternalGames(limit: Int = 5): List<JuegoEntity> {
-        if (BuildConfig.RAWG_API_KEY.isBlank()) {
-            throw IllegalStateException("RAWG_API_KEY no configurada en local.properties")
-        }
-
+    // Backend Integration
+    suspend fun getFavorites(): List<com.example.tiendaapp.data.remote.FavoriteGameDto> {
         return try {
-            val response = rawgApi.getGames(
-                apiKey = BuildConfig.RAWG_API_KEY,
-                pageSize = limit
-            )
-            response.results.map { it.toEntity() }
+            backend.getFavorites()
         } catch (e: Exception) {
-            Log.e("GamesRepository", "Error fetching RAWG data: ${e.message}")
-            throw e
+            Log.e("JuegoRepository", "Error fetching favorites: ${e.message}")
+            emptyList()
         }
     }
 
-    suspend fun crearProducto(
-        nombre: String,
-        descripcion: String,
-        imagen: String,
-        precio: Int,
-        valoracion: Double,
-        stock: Int
-    ) {
+    suspend fun addFavorite(game: com.example.tiendaapp.data.remote.FavoriteGameDto) {
         try {
-            backendApi.crearProducto(
-                com.example.tiendaapp.data.remote.ProductoDto(
-                    nombre = nombre,
-                    descripcion = descripcion,
-                    imagen = imagen,
-                    precio = precio,
-                    valoracion = valoracion,
-                    stock = stock
-                )
-            )
-            refreshGames()
+            backend.addFavorite(game)
         } catch (e: Exception) {
-            Log.e("GamesRepository", "Error creating product: ${e.message}")
-            throw e
+            Log.e("JuegoRepository", "Error adding favorite: ${e.message}")
         }
     }
 
-    suspend fun eliminarProducto(id: Int) {
+    suspend fun removeFavorite(gameId: Int) {
         try {
-            backendApi.eliminarProducto(id.toLong())
-            refreshGames()
+            backend.removeFavorite(gameId)
         } catch (e: Exception) {
-            Log.e("GamesRepository", "Error deleting product: ${e.message}")
-            throw e
+            Log.e("JuegoRepository", "Error removing favorite: ${e.message}")
+        }
+    }
+
+    suspend fun updateFavoriteNote(gameId: Int, note: String) {
+        try {
+            // Backend only uses the note field for the PUT request
+            val dummyDto = com.example.tiendaapp.data.remote.FavoriteGameDto(
+                gameId = gameId,
+                title = "",
+                imageUrl = "",
+                note = note
+            )
+            backend.updateFavorite(gameId, dummyDto)
+        } catch (e: Exception) {
+            Log.e("JuegoRepository", "Error updating note: ${e.message}")
         }
     }
 }

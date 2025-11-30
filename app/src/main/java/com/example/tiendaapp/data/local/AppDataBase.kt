@@ -5,7 +5,6 @@ import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
 import com.example.tiendaapp.model.JuegoEntity
-import com.example.tiendaapp.data.local.JuegoDao
 
 @Database(
     entities = [JuegoEntity::class],

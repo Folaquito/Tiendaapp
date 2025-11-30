@@ -5,12 +5,11 @@ import androidx.lifecycle.viewModelScope
 import com.example.tiendaapp.model.JuegoEntity
 import com.example.tiendaapp.repository.JuegoRepository
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.flow.MutableStateFlow
 
 class JuegoViewModel(
     private val repository: JuegoRepository
@@ -23,21 +22,12 @@ class JuegoViewModel(
             initialValue = emptyList()
         )
 
-    private val _backOfficeMessage = MutableStateFlow<String?>(null)
-    val backOfficeMessage: StateFlow<String?> = _backOfficeMessage.asStateFlow()
-
-    private val _isOperating = MutableStateFlow(false)
-    val isOperating: StateFlow<Boolean> = _isOperating.asStateFlow()
-
-    private val _externalGames = MutableStateFlow<List<JuegoEntity>>(emptyList())
-    val externalGames: StateFlow<List<JuegoEntity>> = _externalGames.asStateFlow()
-
-    private val _externalError = MutableStateFlow<String?>(null)
-    val externalError: StateFlow<String?> = _externalError.asStateFlow()
+    private val _favorites = MutableStateFlow<List<com.example.tiendaapp.data.remote.FavoriteGameDto>>(emptyList())
+    val favorites: StateFlow<List<com.example.tiendaapp.data.remote.FavoriteGameDto>> = _favorites
 
     init {
         refreshData()
-        loadExternalGames()
+        loadFavorites()
     }
 
     fun refreshData() {
@@ -45,6 +35,31 @@ class JuegoViewModel(
             repository.refreshGames()
         }
     }
+
+    fun loadFavorites() {
+        viewModelScope.launch {
+            _favorites.value = repository.getFavorites()
+        }
+    }
+
+    fun toggleFavorite(game: JuegoEntity) {
+        viewModelScope.launch {
+            val currentFavs = _favorites.value
+            val existing = currentFavs.find { it.gameId == game.id }
+            if (existing != null) {
+                repository.removeFavorite(game.id)
+            } else {
+                val newFav = com.example.tiendaapp.data.remote.FavoriteGameDto(
+                    gameId = game.id,
+                    title = game.name,
+                    imageUrl = game.imageUrl
+                )
+                repository.addFavorite(newFav)
+            }
+            loadFavorites()
+        }
+    }
+
     fun getGameFlow(id: Int): Flow<JuegoEntity?> {
         return repository.getGameById(id)
     }
@@ -55,50 +70,10 @@ class JuegoViewModel(
         }
     }
 
-    fun loadExternalGames(limit: Int = 6) {
+    fun updateNote(gameId: Int, note: String) {
         viewModelScope.launch {
-            try {
-                _externalError.value = null
-                _externalGames.value = repository.fetchExternalGames(limit)
-            } catch (e: Exception) {
-                _externalError.value = e.message ?: "No se pudieron cargar las recomendaciones"
-            }
-        }
-    }
-
-    fun crearProducto(
-        nombre: String,
-        descripcion: String,
-        imagen: String,
-        precio: Int,
-        valoracion: Double,
-        stock: Int
-    ) {
-        viewModelScope.launch {
-            _isOperating.value = true
-            _backOfficeMessage.value = null
-            try {
-                repository.crearProducto(nombre, descripcion, imagen, precio, valoracion, stock)
-                _backOfficeMessage.value = "Producto guardado correctamente"
-            } catch (e: Exception) {
-                _backOfficeMessage.value = "No se pudo guardar: ${e.message}"
-            } finally {
-                _isOperating.value = false
-            }
-        }
-    }
-
-    fun eliminarProducto(id: Int) {
-        viewModelScope.launch {
-            _isOperating.value = true
-            try {
-                repository.eliminarProducto(id)
-                _backOfficeMessage.value = "Producto eliminado"
-            } catch (e: Exception) {
-                _backOfficeMessage.value = "No se pudo eliminar: ${e.message}"
-            } finally {
-                _isOperating.value = false
-            }
+            repository.updateFavoriteNote(gameId, note)
+            loadFavorites()
         }
     }
 }

@@ -2,6 +2,7 @@ package com.example.tiendaapp.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
+import com.example.tiendaapp.data.remote.RetrofitClient
 import com.example.tiendaapp.repository.JuegoRepository
 
 class JuegoViewModelFactory(private val repository: JuegoRepository) : ViewModelProvider.Factory {

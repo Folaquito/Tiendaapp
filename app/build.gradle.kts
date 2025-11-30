@@ -36,8 +36,18 @@ android {
         buildConfigField("String", "RAWG_API_KEY", "\"$rawgApiKey\"")
     }
 
+    signingConfigs {
+        create("release") {
+            storeFile = file("release-key.jks")
+            storePassword = "password123"
+            keyAlias = "my-key-alias"
+            keyPassword = "password123"
+        }
+    }
+
     buildTypes {
         release {
+            signingConfig = signingConfigs.getByName("release")
             isMinifyEnabled = false
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
@@ -87,6 +97,10 @@ dependencies {
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
     implementation(libs.androidx.compose.material.icons.extended)
+
+    // Test
+    testImplementation("io.mockk:mockk:1.13.8")
+    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.7.3")
 
     // Retrofit
     implementation("com.squareup.retrofit2:retrofit:2.11.0")
