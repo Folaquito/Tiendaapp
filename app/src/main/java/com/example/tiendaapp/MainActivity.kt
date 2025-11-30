@@ -37,7 +37,8 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         val database = AppDatabase.getDatabase(applicationContext)
         val api = RetrofitClient.apiService
-        val repository = JuegoRepository(api, database.juegoDao())
+        val backend = RetrofitClient.backendService
+        val repository = JuegoRepository(api, database.juegoDao(), backend)
         val viewModelFactory = JuegoViewModelFactory(repository)
         setContent {
             val navController = rememberNavController()
