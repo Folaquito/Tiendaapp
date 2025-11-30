@@ -20,6 +20,15 @@ import com.example.tiendaapp.viewmodel.CartViewModel
 import com.example.tiendaapp.viewmodel.JuegoViewModel
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AddShoppingCart
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.FavoriteBorder
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.FavoriteBorder
+
+import androidx.compose.ui.text.font.FontStyle
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -30,15 +39,65 @@ fun CatalogoScreen(
 ) {
 
     val juegos by gamesViewModel.games.collectAsState()
+    val favorites by gamesViewModel.favorites.collectAsState()
+    var showFavorites by remember { mutableStateOf(false) }
+
+    // State for Note Dialog
+    var showNoteDialog by remember { mutableStateOf(false) }
+    var currentNoteGameId by remember { mutableStateOf<Int?>(null) }
+    var currentNoteContent by remember { mutableStateOf("") }
+
+    val displayedGames = if (showFavorites) {
+        juegos.filter { game -> favorites.any { it.gameId == game.id } }
+    } else {
+        juegos
+    }
+
+    if (showNoteDialog && currentNoteGameId != null) {
+        AlertDialog(
+            onDismissRequest = { showNoteDialog = false },
+            title = { Text("Nota Personal") },
+            text = {
+                OutlinedTextField(
+                    value = currentNoteContent,
+                    onValueChange = { currentNoteContent = it },
+                    label = { Text("Escribe una nota...") },
+                    modifier = Modifier.fillMaxWidth()
+                )
+            },
+            confirmButton = {
+                Button(onClick = {
+                    gamesViewModel.updateNote(currentNoteGameId!!, currentNoteContent)
+                    showNoteDialog = false
+                }) {
+                    Text("Guardar")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showNoteDialog = false }) {
+                    Text("Cancelar")
+                }
+            }
+        )
+    }
 
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Catálogo de Juegos") },
+                title = { Text(if (showFavorites) "Mis Favoritos" else "Catálogo de Juegos") },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.primaryContainer,
                     titleContentColor = MaterialTheme.colorScheme.primary
-                )
+                ),
+                actions = {
+                    IconButton(onClick = { showFavorites = !showFavorites }) {
+                        Icon(
+                            imageVector = if (showFavorites) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
+                            contentDescription = "Ver Favoritos",
+                            tint = MaterialTheme.colorScheme.primary
+                        )
+                    }
+                }
             )
         }
     ) { innerPadding ->
@@ -50,9 +109,21 @@ fun CatalogoScreen(
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
 
-            items(juegos, key = { it.id }) { juego ->
+            items(displayedGames, key = { it.id }) { juego ->
+                val favoriteGame = favorites.find { it.gameId == juego.id }
+                val isFavorite = favoriteGame != null
+                val note = favoriteGame?.note
+
                 JuegoCard(
                     juego = juego,
+                    isFavorite = isFavorite,
+                    note = note,
+                    onToggleFavorite = { gamesViewModel.toggleFavorite(juego) },
+                    onEditNote = {
+                        currentNoteGameId = juego.id
+                        currentNoteContent = note ?: ""
+                        showNoteDialog = true
+                    },
                     onClick = {
                         navController.navigate("detalle/${juego.id}")
                     },
@@ -64,10 +135,15 @@ fun CatalogoScreen(
         }
     }
 }
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun JuegoCard(
     juego: JuegoEntity,
+    isFavorite: Boolean,
+    note: String?,
+    onToggleFavorite: () -> Unit,
+    onEditNote: () -> Unit,
     onClick: () -> Unit,
     onAddToCart: () -> Unit
 ) {
@@ -77,14 +153,28 @@ fun JuegoCard(
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
         Column {
-            AsyncImage(
-                model = juego.imageUrl,
-                contentDescription = "Imagen de ${juego.name}",
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(200.dp),
-                contentScale = ContentScale.Crop,
-            )
+            Box {
+                AsyncImage(
+                    model = juego.imageUrl,
+                    contentDescription = "Imagen de ${juego.name}",
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(200.dp),
+                    contentScale = ContentScale.Crop,
+                )
+                IconButton(
+                    onClick = onToggleFavorite,
+                    modifier = Modifier
+                        .align(Alignment.TopEnd)
+                        .padding(8.dp)
+                ) {
+                    Icon(
+                        imageVector = if (isFavorite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
+                        contentDescription = "Favorito",
+                        tint = if (isFavorite) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.surface
+                    )
+                }
+            }
 
             Column(modifier = Modifier.padding(16.dp)) {
                 Text(
@@ -100,6 +190,21 @@ fun JuegoCard(
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.secondary
                 )
+
+                if (isFavorite) {
+                    Spacer(modifier = Modifier.height(8.dp))
+                    if (!note.isNullOrBlank()) {
+                        Text(
+                            text = "Nota: $note",
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontStyle = FontStyle.Italic,
+                            color = MaterialTheme.colorScheme.tertiary
+                        )
+                    }
+                    TextButton(onClick = onEditNote) {
+                        Text(if (note.isNullOrBlank()) "Agregar Nota Personal" else "Editar Nota")
+                    }
+                }
 
                 Spacer(modifier = Modifier.height(12.dp))
 
