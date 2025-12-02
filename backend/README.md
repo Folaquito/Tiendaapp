@@ -15,7 +15,7 @@ Microservicio en Spring Boot que expone un CRUD básico de productos para ser co
 Desde la raíz del repositorio:
 
 ```powershell
-./gradlew -p backend bootRun
+../gradlew -p backend bootRun
 ```
 
 Por defecto corre en `http://localhost:8081` y usa H2 en memoria. La consola H2 queda disponible en `http://localhost:8081/h2-console` (JDBC `jdbc:h2:mem:tiendaapp`).

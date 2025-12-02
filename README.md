@@ -39,6 +39,7 @@ La aplicación permite explorar un catálogo de videojuegos y gestionar una list
 - Android Studio Ladybug o superior.
 - JDK 17.
 - Emulador Android configurado.
+- Crear el archivo "local.properties" y dejar RAWG_API_KEY=<llave>
 
 ### Paso 1: Iniciar el Backend
 
@@ -51,9 +52,9 @@ El backend es necesario para la funcionalidad de favoritos.
 
 3.  Ejecutar el servidor Spring Boot:
 
-    \gradlew.bat bootRun
+    ..\gradlew.bat bootRun
 
-4.  Esperar a que aparezca el mensaje `Tomcat started on port 8080`.
+4.  Esperar a que aparezca el mensaje `Tomcat started on port 8081`.
 
 ### Paso 2: Ejecutar la App Android
 
