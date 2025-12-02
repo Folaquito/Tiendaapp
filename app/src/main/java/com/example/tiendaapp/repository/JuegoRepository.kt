@@ -37,7 +37,8 @@ class JuegoRepository(
 
     suspend fun fetchGameDescription(id: Int) {
         try {
-            val response = api.getGameDetail(id, "llave")
+            val apiKey = com.example.tiendaapp.BuildConfig.RAWG_API_KEY
+            val response = api.getGameDetail(id, apiKey)
 
             if (response.description.isNotEmpty()) {
                 dao.updateGameDescription(id, response.description)
