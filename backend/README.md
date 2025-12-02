@@ -19,3 +19,4 @@ Desde la raíz del repositorio:
 ```
 
 Por defecto corre en `http://localhost:8081` y usa H2 en memoria. La consola H2 queda disponible en `http://localhost:8081/h2-console` (JDBC `jdbc:h2:mem:tiendaapp`).
+Los cambios en el crud se ven en `http://localhost:8081/favorites`
