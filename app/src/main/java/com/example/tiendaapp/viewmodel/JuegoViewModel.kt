@@ -25,6 +25,12 @@ class JuegoViewModel(
     private val _favorites = MutableStateFlow<List<com.example.tiendaapp.data.remote.FavoriteGameDto>>(emptyList())
     val favorites: StateFlow<List<com.example.tiendaapp.data.remote.FavoriteGameDto>> = _favorites
 
+    private val _backOfficeMessage = MutableStateFlow<String?>(null)
+    val backOfficeMessage: StateFlow<String?> = _backOfficeMessage
+
+    private val _isOperating = MutableStateFlow(false)
+    val isOperating: StateFlow<Boolean> = _isOperating
+
     init {
         refreshData()
         loadFavorites()
@@ -74,6 +80,29 @@ class JuegoViewModel(
         viewModelScope.launch {
             repository.updateFavoriteNote(gameId, note)
             loadFavorites()
+        }
+    }
+
+    fun crearProducto(nombre: String, descripcion: String, imagen: String, precio: Int, valoracion: Double, stock: Int) {
+        viewModelScope.launch {
+            _isOperating.value = true
+            _backOfficeMessage.value = null
+            try {
+                val producto = com.example.tiendaapp.data.remote.ProductoDto(
+                    nombre = nombre,
+                    descripcion = descripcion,
+                    imagen = imagen,
+                    precio = precio,
+                    valoracion = valoracion,
+                    stock = stock
+                )
+                repository.crearProducto(producto)
+                _backOfficeMessage.value = "Producto creado exitosamente"
+            } catch (e: Exception) {
+                _backOfficeMessage.value = "Error al crear producto: ${e.message}"
+            } finally {
+                _isOperating.value = false
+            }
         }
     }
 }
