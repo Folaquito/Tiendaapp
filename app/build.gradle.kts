@@ -36,23 +36,7 @@ android {
         buildConfigField("String", "RAWG_API_KEY", "\"$rawgApiKey\"")
     }
 
-    signingConfigs {
-        create("release") {
-            storeFile = file("release-key.jks")
-            storePassword = "password123"
-            keyAlias = "my-key-alias"
-            keyPassword = "password123"
-        }
-    }
 
-    signingConfigs {
-        create("release") {
-            storeFile = file("release-key.jks")
-            storePassword = "password123"
-            keyAlias = "my-key-alias"
-            keyPassword = "password123"
-        }
-    }
 
     buildTypes {
         release {
@@ -62,7 +46,7 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
-            signingConfig = signingConfigs.getByName("release")
+
         }
     }
     compileOptions {
