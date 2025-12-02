@@ -1,14 +1,18 @@
 package com.example.tiendaapp.views
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.example.tiendaapp.viewmodel.LoginViewModel
+import com.example.tiendaapp.R
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -59,8 +63,17 @@ fun RegisterScreen(navController: NavController, viewModel: LoginViewModel) {
             .fillMaxSize()
             .padding(20.dp)
             .verticalScroll(rememberScrollState()),
-        verticalArrangement = Arrangement.Center
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
+        Image(
+            painter = painterResource(id = R.drawable.tiendita_app_moviles),
+            contentDescription = "Logo de la tienda",
+            modifier = Modifier
+                .size(150.dp)
+                .padding(bottom = 16.dp)
+        )
+
         Text("Registro", style = MaterialTheme.typography.titleLarge)
 
         OutlinedTextField(
