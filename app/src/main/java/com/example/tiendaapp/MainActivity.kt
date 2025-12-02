@@ -38,7 +38,8 @@ class MainActivity : ComponentActivity() {
         val database = AppDatabase.getDatabase(applicationContext)
         val api = RetrofitClient.apiService
         val backend = RetrofitClient.backendService
-        val repository = JuegoRepository(api, database.juegoDao(), backend)
+        val microservice = RetrofitClient.microserviceApiService
+        val repository = JuegoRepository(api, database.juegoDao(), backend, microservice)
         val viewModelFactory = JuegoViewModelFactory(repository)
         setContent {
             val navController = rememberNavController()
@@ -83,7 +84,7 @@ class MainActivity : ComponentActivity() {
                     BackOfficeScreen(navController, juegoViewModel)
                 }
                 composable("backoffice/agregar") {
-                    AddProductScreen(navController)
+                    AddProductScreen(navController, juegoViewModel)
                 }
             }
         }

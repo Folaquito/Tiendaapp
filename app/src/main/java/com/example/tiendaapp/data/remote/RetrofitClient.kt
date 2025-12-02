@@ -27,14 +27,21 @@ object RetrofitClient {
             .create(ApiService::class.java)
     }
 
-    private const val BACKEND_URL = "http://10.0.2.2:8080/"
-
     val backendService: BackendService by lazy {
         Retrofit.Builder()
-            .baseUrl(BACKEND_URL)
+            .baseUrl(com.example.tiendaapp.BuildConfig.MICROSERVICE_BASE_URL)
             .client(okHttpClient)
             .addConverterFactory(GsonConverterFactory.create())
             .build()
             .create(BackendService::class.java)
+    }
+
+    val microserviceApiService: MicroserviceApiService by lazy {
+        Retrofit.Builder()
+            .baseUrl(com.example.tiendaapp.BuildConfig.MICROSERVICE_BASE_URL)
+            .client(okHttpClient)
+            .addConverterFactory(GsonConverterFactory.create())
+            .build()
+            .create(MicroserviceApiService::class.java)
     }
 }

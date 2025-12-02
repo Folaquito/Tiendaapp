@@ -11,15 +11,16 @@ import kotlinx.coroutines.flow.Flow
 class JuegoRepository(
     private val api: ApiService,
     private val dao: JuegoDao,
-    private val backend: com.example.tiendaapp.data.remote.BackendService
+    private val backend: com.example.tiendaapp.data.remote.BackendService,
+    private val microservice: com.example.tiendaapp.data.remote.MicroserviceApiService
 ) {
 
     val games: Flow<List<JuegoEntity>> = dao.getAllGames()
 
     suspend fun refreshGames() {
         try {
-            // NOTE: Using a placeholder key. In a real app, this should be in local.properties
-            val response = api.getGames(apiKey = "llave")
+            val apiKey = com.example.tiendaapp.BuildConfig.RAWG_API_KEY
+            val response = api.getGames(apiKey = apiKey)
 
             val gamesEntities = response.results.map { dto ->
                 dto.toEntity()
@@ -84,6 +85,15 @@ class JuegoRepository(
             backend.updateFavorite(gameId, dummyDto)
         } catch (e: Exception) {
             Log.e("JuegoRepository", "Error updating note: ${e.message}")
+        }
+    }
+
+    suspend fun crearProducto(producto: com.example.tiendaapp.data.remote.ProductoDto) {
+        try {
+            microservice.crearProducto(producto)
+        } catch (e: Exception) {
+            Log.e("JuegoRepository", "Error creating product: ${e.message}")
+            throw e
         }
     }
 }
