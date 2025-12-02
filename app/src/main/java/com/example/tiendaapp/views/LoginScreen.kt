@@ -69,20 +69,20 @@ fun LoginScreen(navController: NavController, viewModel: LoginViewModel) {
 
         Button(
             onClick = {
-                if (viewModel.login(email, password)) {
-                    navController.navigate("home/$email")
+                if (email == "admin@gmail.com" && password == "Admin123") {
+                    navController.navigate("backoffice")
+                }
+                else {
+                    if (viewModel.login(email, password)) {
+                        navController.navigate("home/$email")
+                    } else {
+                    }
                 }
             },
-            enabled = canSubmit
+            enabled = canSubmit,
+            modifier = Modifier.fillMaxWidth()
         ) {
             Text("Entrar")
-        }
-
-        Text(viewModel.mensaje.value, modifier = Modifier.padding(top = 10.dp))
-
-        Spacer(modifier = Modifier.height(24.dp))
-        TextButton(onClick = { navController.navigate("backoffice") }) {
-            Text("Acceso Back Office")
         }
     }
 }

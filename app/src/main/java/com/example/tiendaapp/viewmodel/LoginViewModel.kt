@@ -10,7 +10,7 @@ class LoginViewModel : ViewModel() {
     var usuarioActual = mutableStateOf<String?>(null)
     var rutError = mutableStateOf<String?>(null)
 
-    fun registrar(nombre: String, email: String, password: String, rut: String, direccion: String) {
+    fun registrar(nombre: String, email: String, password: String, rut: String, direccion: String, region: String, comuna: String) {
         if (!validarRut(rut)) {
             mensaje.value = "Registro fallido. Verifica el RUT."
             return
