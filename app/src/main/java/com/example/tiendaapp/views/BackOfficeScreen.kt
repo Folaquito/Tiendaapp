@@ -91,18 +91,6 @@ fun BackOfficeScreen(navController: NavController, juegoViewModel: JuegoViewMode
                 )
             }
 
-            LazyColumn(
-                modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                items(juegos, key = { it.id }) { juego ->
-                    BackOfficeItem(
-                        juego = juego,
-                        onDelete = { juegoViewModel.eliminarProducto(juego.id) }
-                    )
-                }
-            }
-
             OutlinedButton(
                 modifier = Modifier.fillMaxWidth(),
                 onClick = { navController.navigate("catalogo") }
