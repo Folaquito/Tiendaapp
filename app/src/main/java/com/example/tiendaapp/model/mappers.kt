@@ -9,10 +9,10 @@ fun Juego.toEntity(): JuegoEntity {
         imageUrl = this.backgroundImage ?: "",
         rating = this.rating,
         price = when {
-            this.rating > 4.5 -> 64990
-            this.rating > 4.0 -> 49990
-            this.rating > 3.0 -> 29990
-            else -> 14990
+            this.rating > 4.5 -> 24990
+            this.rating > 4.0 -> 19990
+            this.rating > 3.0 -> 14990
+            else -> 9990
         },
         stock = 0,
         description = null,

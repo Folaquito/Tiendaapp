@@ -71,7 +71,7 @@ class JuegoViewModelTest {
 
     @Test
     fun `toggleFavorite adds favorite if not exists`() = runTest {
-        val game = JuegoEntity(101, "Game 1", "url", 4.5, 1000, 15,"desc")
+        val game = JuegoEntity(101, "Game 1", "url", 4.5, 1000, 15,"desc", null, null, null)
         coEvery { repository.getFavorites() } returns emptyList()
 
         viewModel.toggleFavorite(game)
@@ -82,7 +82,7 @@ class JuegoViewModelTest {
 
     @Test
     fun `toggleFavorite removes favorite if exists`() = runTest {
-        val game = JuegoEntity(101, "Game 1", "url", 4.5, 1000, 15,"desc")
+        val game = JuegoEntity(101, "Game 1", "url", 4.5, 1000, 15,"desc", null, null, null)
         val favorites = listOf(FavoriteGameDto(1, 101, "Game 1", "url"))
         coEvery { repository.getFavorites() } returns favorites
 
@@ -98,7 +98,7 @@ class JuegoViewModelTest {
 
     @Test
     fun `toggleFavorite reloads favorites after action`() = runTest {
-        val game = JuegoEntity(101, "Game 1", "url", 4.5, 1000, 15,"desc")
+        val game = JuegoEntity(101, "Game 1", "url", 4.5, 1000, 15,"desc", null, null, null)
         coEvery { repository.getFavorites() } returns emptyList()
 
         viewModel.toggleFavorite(game)

@@ -16,7 +16,10 @@ class CartViewModelTest {
         rating = 4.5,
         price = 10000,
         stock = 5,
-        description = "Demo"
+        description = "Demo",
+        genres = null,
+        platforms = null,
+        esrbRating = null
     )
 
     @Before
