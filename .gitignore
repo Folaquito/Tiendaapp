@@ -1,17 +1,28 @@
 *.iml
 .gradle
 /local.properties
-/.idea/caches
-/.idea/libraries
-/.idea/modules.xml
-/.idea/workspace.xml
-/.idea/navEditor.xml
-/.idea/assetWizardSettings.xml
+/.idea/
+/.kotlin/
 .DS_Store
 /build
 /captures
 .externalNativeBuild
 .cxx
 local.properties
+
+# Android app outputs
+/app/build/
+/app/release/
+*.aab
 app/release-key.jks
-backend/build/
+
+# Backend outputs
+/backend/build/
+backend_bootrun*.log
+backend_bootrun*.out
+backend_bootrun*.err
+bootrun_tmp*.log
+
+# Temp files
+tmp_*.json
+tmp_*.ps1
