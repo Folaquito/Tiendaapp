@@ -10,10 +10,13 @@ import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
+import org.springframework.web.bind.annotation.PutMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.ResponseStatus
 import org.springframework.web.bind.annotation.RestController
+import org.springframework.web.server.ResponseStatusException
+import org.springframework.transaction.annotation.Transactional
 
 @RestController
 @RequestMapping("/favorites")
@@ -33,8 +36,21 @@ class FavoriteController(
         return saved.toDto()
     }
 
+    @PutMapping("/{gameId}")
+    fun update(
+        @PathVariable gameId: Int,
+        @RequestBody dto: FavoriteDto
+    ): FavoriteDto {
+        val existing = repository.findByGameId(gameId)
+            ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "favorite no encontrado")
+
+        val toSave = dto.copy(gameId = gameId, id = existing.id).toEntity(existing.id)
+        return repository.save(toSave).toDto()
+    }
+
     @DeleteMapping("/{gameId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
+    @Transactional
     fun delete(@PathVariable gameId: Int) {
         repository.findByGameId(gameId)?.let { repository.deleteByGameId(gameId) }
     }
