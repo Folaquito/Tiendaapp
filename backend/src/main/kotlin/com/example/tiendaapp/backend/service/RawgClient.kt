@@ -23,10 +23,8 @@ class RawgClient(
     private val baseUrl = "https://api.rawg.io/api"
 
     fun getGame(rawgId: Long): RawgGameResponse {
-        if (apiKey.isBlank()) {
-            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "RAWG_API_KEY no configurada")
-        }
-        val encodedKey = URLEncoder.encode(apiKey, StandardCharsets.UTF_8)
+        val key = resolveApiKey()
+        val encodedKey = URLEncoder.encode(key, StandardCharsets.UTF_8)
         val url = "$baseUrl/games/$rawgId?key=$encodedKey"
         return try {
             restTemplate.getForObject(url, RawgGameResponse::class.java)
@@ -34,17 +32,15 @@ class RawgClient(
         } catch (ex: HttpClientErrorException.NotFound) {
             throw ResponseStatusException(HttpStatus.NOT_FOUND, "Juego RAWG no encontrado")
         } catch (ex: HttpClientErrorException) {
-            throw ResponseStatusException(ex.statusCode, "Error RAWG: ${ex.statusText}")
+            throw ResponseStatusException(HttpStatus.BAD_GATEWAY, "Error RAWG: ${ex.statusText}")
         } catch (ex: RestClientException) {
-            throw ResponseStatusException(HttpStatus.BAD_GATEWAY, "Error conectando a RAWG: ${ex.message}")
+            throw ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, "Error conectando a RAWG: ${ex.message}")
         }
     }
 
     fun getGames(page: Int, pageSize: Int): RawgGamesResponse {
-        if (apiKey.isBlank()) {
-            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "RAWG_API_KEY no configurada")
-        }
-        val encodedKey = URLEncoder.encode(apiKey, StandardCharsets.UTF_8)
+        val key = resolveApiKey()
+        val encodedKey = URLEncoder.encode(key, StandardCharsets.UTF_8)
         val url = "$baseUrl/games?page=$page&page_size=$pageSize&key=$encodedKey"
         return try {
             restTemplate.getForObject(url, RawgGamesResponse::class.java)
@@ -52,9 +48,21 @@ class RawgClient(
         } catch (ex: HttpClientErrorException.NotFound) {
             throw ResponseStatusException(HttpStatus.NOT_FOUND, "Página RAWG no encontrada")
         } catch (ex: HttpClientErrorException) {
-            throw ResponseStatusException(ex.statusCode, "Error RAWG: ${ex.statusText}")
+            throw ResponseStatusException(HttpStatus.BAD_GATEWAY, "Error RAWG: ${ex.statusText}")
         } catch (ex: RestClientException) {
-            throw ResponseStatusException(HttpStatus.BAD_GATEWAY, "Error conectando a RAWG: ${ex.message}")
+            throw ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, "Error conectando a RAWG: ${ex.message}")
         }
+    }
+
+    private fun resolveApiKey(): String {
+        val envKey = System.getenv("RAWG_API_KEY") ?: ""
+        val key = apiKey.ifBlank { envKey }.trim()
+        if (key.isBlank()) {
+            throw ResponseStatusException(
+                HttpStatus.SERVICE_UNAVAILABLE,
+                "RAWG_API_KEY no configurada (define rawg.apiKey o env RAWG_API_KEY)"
+            )
+        }
+        return key
     }
 }
