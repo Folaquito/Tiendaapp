@@ -7,6 +7,7 @@ import androidx.room.PrimaryKey
 data class JuegoEntity(
     @PrimaryKey
     val id: Int,
+    val rawgGameId: Int? = null,
     val name: String,
     val imageUrl: String,
     val rating: Double,

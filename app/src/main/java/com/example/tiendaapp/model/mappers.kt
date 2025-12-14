@@ -5,6 +5,7 @@ import com.example.tiendaapp.data.remote.ProductoDto
 fun Juego.toEntity(): JuegoEntity {
     return JuegoEntity(
         id = this.id,
+        rawgGameId = this.id,
         name = this.name,
         imageUrl = this.backgroundImage ?: "",
         rating = this.rating,
@@ -24,6 +25,7 @@ fun Juego.toEntity(): JuegoEntity {
 
 fun ProductoDto.toEntity(): JuegoEntity = JuegoEntity(
     id = (id ?: 0).toInt(),
+    rawgGameId = rawgGameId?.toInt(),
     name = nombre,
     imageUrl = imagen,
     rating = valoracion,
@@ -37,6 +39,7 @@ fun ProductoDto.toEntity(): JuegoEntity = JuegoEntity(
 
 fun JuegoEntity.toProductoDto(): ProductoDto = ProductoDto(
     id = id.toLong(),
+    rawgGameId = rawgGameId?.toLong(),
     nombre = name,
     descripcion = description ?: "Sin descripción",
     imagen = imageUrl ?: "",
