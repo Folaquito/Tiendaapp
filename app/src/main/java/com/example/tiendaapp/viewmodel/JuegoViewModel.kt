@@ -38,7 +38,11 @@ class JuegoViewModel(
 
     fun refreshData() {
         viewModelScope.launch {
-            repository.refreshGames()
+            try {
+                repository.refreshGames()
+            } catch (_: Exception) {
+                // Intentionally swallow to avoid crashing UI when refresh fails
+            }
         }
     }
 

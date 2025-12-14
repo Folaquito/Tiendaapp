@@ -27,6 +27,20 @@ class JuegoViewModelTest {
     private lateinit var viewModel: JuegoViewModel
     private val testDispatcher = StandardTestDispatcher()
 
+    private fun sampleGame(id: Int = 101) = JuegoEntity(
+        id = id,
+        rawgGameId = null,
+        name = "Game 1",
+        imageUrl = "url",
+        rating = 4.5,
+        price = 1000,
+        stock = 15,
+        description = "desc",
+        genres = null,
+        platforms = null,
+        esrbRating = null
+    )
+
     @Before
     fun setup() {
         Dispatchers.setMain(testDispatcher)
@@ -71,7 +85,7 @@ class JuegoViewModelTest {
 
     @Test
     fun `toggleFavorite adds favorite if not exists`() = runTest {
-        val game = JuegoEntity(101, "Game 1", "url", 4.5, 1000, 15,"desc", null, null, null)
+        val game = sampleGame()
         coEvery { repository.getFavorites() } returns emptyList()
 
         viewModel.toggleFavorite(game)
@@ -82,7 +96,7 @@ class JuegoViewModelTest {
 
     @Test
     fun `toggleFavorite removes favorite if exists`() = runTest {
-        val game = JuegoEntity(101, "Game 1", "url", 4.5, 1000, 15,"desc", null, null, null)
+        val game = sampleGame()
         val favorites = listOf(FavoriteGameDto(1, 101, "Game 1", "url"))
         coEvery { repository.getFavorites() } returns favorites
 
@@ -98,7 +112,7 @@ class JuegoViewModelTest {
 
     @Test
     fun `toggleFavorite reloads favorites after action`() = runTest {
-        val game = JuegoEntity(101, "Game 1", "url", 4.5, 1000, 15,"desc", null, null, null)
+        val game = sampleGame()
         coEvery { repository.getFavorites() } returns emptyList()
 
         viewModel.toggleFavorite(game)
