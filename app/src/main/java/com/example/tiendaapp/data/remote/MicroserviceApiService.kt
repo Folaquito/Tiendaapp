@@ -8,6 +8,12 @@ import retrofit2.http.PUT
 import retrofit2.http.Path
 
 interface MicroserviceApiService {
+    @POST("api/auth/register")
+    suspend fun register(@Body request: RegisterRequest): AuthResponse
+
+    @POST("api/auth/login")
+    suspend fun login(@Body request: LoginRequest): AuthResponse
+
     @GET("api/productos")
     suspend fun listarProductos(): List<ProductoDto>
 
