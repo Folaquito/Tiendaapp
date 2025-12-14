@@ -72,7 +72,7 @@ class MainActivity : ComponentActivity() {
                     DetalleJuegoScreen(navController, id, juegoViewModel, cartViewModel)
                 }
                 composable("carrito") {
-                    CartScreen(navController, cartViewModel)
+                    CartScreen(navController, cartViewModel, viewModel)
                 }
                 composable("compra_exitosa") {
                     PurchaseSuccessScreen(navController, cartViewModel)
