@@ -20,6 +20,7 @@ class RawgImportService(
 
     private val random = SecureRandom()
     private val alphabet = (('A'..'Z') + ('0'..'9')).toTypedArray()
+    private val imagePlaceholder = "https://via.placeholder.com/640x360?text=No+Image"
 
     fun importProduct(rawgId: Long, request: ImportRawgRequest): ImportResult {
         validateRequest(request)
@@ -27,7 +28,7 @@ class RawgImportService(
 
         val nombre = rawgGame.name ?: "Juego sin nombre"
         val descripcion = rawgGame.description_raw ?: rawgGame.description ?: ""
-        val imagen = rawgGame.background_image ?: ""
+        val imagen = rawgGame.background_image?.takeIf { it.isNotBlank() } ?: imagePlaceholder
         val valoracion = rawgGame.metacritic?.toDouble() ?: rawgGame.rating ?: 0.0
 
         val existing = productoRepository.findByRawgGameId(rawgId)
@@ -67,6 +68,7 @@ class RawgImportService(
     }
 
     fun importGames(page: Int, pageSize: Int, defaultPrice: Int, defaultStock: Int): List<Producto> {
+        validateListRequest(page, pageSize, defaultPrice, defaultStock)
         val rawgGames = rawgClient.getGames(page, pageSize).results.orEmpty()
         if (rawgGames.isEmpty()) return emptyList()
 
@@ -75,7 +77,7 @@ class RawgImportService(
             val gameId = rawgGame.id ?: return@forEach
             val nombre = rawgGame.name ?: return@forEach
             val descripcion = rawgGame.description_raw ?: rawgGame.description ?: ""
-            val imagen = rawgGame.background_image ?: ""
+            val imagen = rawgGame.background_image?.takeIf { it.isNotBlank() } ?: imagePlaceholder
             val valoracion = rawgGame.metacritic?.toDouble() ?: rawgGame.rating ?: 0.0
 
             val existing = productoRepository.findByRawgGameId(gameId)
@@ -85,10 +87,12 @@ class RawgImportService(
                     descripcion = descripcion,
                     imagen = imagen,
                     valoracion = valoracion,
-                    rawgGameId = gameId
+                    rawgGameId = gameId,
+                    precio = defaultPrice,
+                    stock = defaultStock
                 )
                 val saved = productoRepository.save(updated)
-                val withKeys = seedKeys(saved, saved.stock)
+                val withKeys = seedKeys(saved, defaultStock)
                 imported.add(withKeys)
             } else {
                 val nuevo = Producto(
@@ -115,6 +119,13 @@ class RawgImportService(
         request.stock?.let {
             if (it < 0) throw ResponseStatusException(HttpStatus.BAD_REQUEST, "stock debe ser 0 o mayor")
         }
+    }
+
+    private fun validateListRequest(page: Int, pageSize: Int, price: Int, stock: Int) {
+        if (page <= 0) throw ResponseStatusException(HttpStatus.BAD_REQUEST, "page debe ser mayor que 0")
+        if (pageSize <= 0) throw ResponseStatusException(HttpStatus.BAD_REQUEST, "pageSize debe ser mayor que 0")
+        if (price <= 0) throw ResponseStatusException(HttpStatus.BAD_REQUEST, "precio debe ser mayor que 0")
+        if (stock < 0) throw ResponseStatusException(HttpStatus.BAD_REQUEST, "stock debe ser 0 o mayor")
     }
 
     private fun seedKeys(producto: Producto, desired: Int): Producto {
