@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.ResponseStatus
 import org.springframework.web.bind.annotation.RestController
+import org.springframework.web.server.ResponseStatusException
 
 @RestController
 @RequestMapping("/api/productos")
@@ -65,11 +66,16 @@ class ProductoController(
 
     @PostMapping("/import/rawg")
     fun importarListaDesdeRawg(
-        @RequestParam(defaultValue = "1") page: Int,
-        @RequestParam(defaultValue = "20") pageSize: Int,
-        @RequestParam(defaultValue = "29990") precio: Int,
-        @RequestParam(defaultValue = "5") stock: Int
+        @RequestParam(required = false) page: Int?,
+        @RequestParam(required = false) pageSize: Int?,
+        @RequestParam(required = false) precio: Int?,
+        @RequestParam(required = false) stock: Int?
     ): List<Producto> {
-        return rawgImportService.importGames(page, pageSize, precio, stock)
+        val safePrecio = precio ?: throw ResponseStatusException(HttpStatus.BAD_REQUEST, "precio es obligatorio")
+        val safeStock = stock ?: throw ResponseStatusException(HttpStatus.BAD_REQUEST, "stock es obligatorio")
+        val safePage = page ?: 1
+        val safePageSize = pageSize ?: 20
+
+        return rawgImportService.importGames(safePage, safePageSize, safePrecio, safeStock)
     }
 }
