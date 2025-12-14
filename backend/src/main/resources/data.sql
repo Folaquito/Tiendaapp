@@ -1,7 +1,7 @@
 INSERT INTO productos (id, rawg_game_id, nombre, descripcion, imagen, precio, valoracion, en_stock) VALUES
     (1, 41494, 'Cyberpunk 2077', 'RPG futurista ambientado en Night City', 'https://media.rawg.io/media/games/26d/26d4437715bee60138dab4a7c8c59c92.jpg', 29990, 4.5, 5),
-    (2, 326243, 'Elden Ring', 'Acción y fantasía en mundo abierto', 'https://media.rawg.io/media/games/b29/b294fdd866dcdb643e7bab370a552855.jpg', 34990, 4.8, 5),
-    (3, 22509, 'Minecraft', 'Exploración y construcción con bloques', 'https://media.rawg.io/media/games/b4e/b4e4c73d5aa4ec66bbf75375c4847a2b.jpg', 12990, 4.7, 5);
+    (2, 326242, 'Elden Ring', 'Acción y fantasía en mundo abierto', 'https://media.rawg.io/media/games/b29/b29fdd866dcdb643e7bab370a552855.jpg', 34990, 4.8, 5),
+    (3, 22509, 'Minecraft', 'Exploración y construcción con bloques', 'https://media.rawg.io/media/games/b4e/b4e4c73d5aa4c66bbf75375c4847a2b.jpg', 12990, 4.7, 5);
 
 -- Deja el autoincrement del ID después de los seeds para evitar colisiones al importar
 ALTER TABLE productos ALTER COLUMN id RESTART WITH 1000;
