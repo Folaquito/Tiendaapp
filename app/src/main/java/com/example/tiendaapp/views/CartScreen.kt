@@ -12,8 +12,13 @@ import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
@@ -27,6 +32,8 @@ import coil.compose.AsyncImage
 import com.example.tiendaapp.Helper.toClp
 import com.example.tiendaapp.model.CartItem
 import com.example.tiendaapp.viewmodel.CartViewModel
+import com.example.tiendaapp.viewmodel.LoginViewModel
+import kotlinx.coroutines.launch
 
 // --- COLORES GLOBALES ---
 private val NeonCyan = Color(0xFF00E5FF)
@@ -38,9 +45,18 @@ private val ErrorRed = Color(0xFFFF5252)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun CartScreen(navController: NavController, cartViewModel: CartViewModel) {
+fun CartScreen(navController: NavController, cartViewModel: CartViewModel, loginViewModel: LoginViewModel) {
     val items by cartViewModel.items.collectAsState()
+    val currentUser by loginViewModel.currentUser.collectAsState(initial = null)
     val total = cartViewModel.calcularTotal()
+    val isProcessing by cartViewModel.isProcessing.collectAsState()
+    val errorMessage by cartViewModel.errorMessage.collectAsState()
+    val scope = rememberCoroutineScope()
+    var lastError by remember { mutableStateOf<String?>(null) }
+
+    LaunchedEffect(errorMessage) {
+        lastError = errorMessage
+    }
 
     Scaffold(
         containerColor = DarkBg, // Fondo oscuro general
@@ -88,11 +104,21 @@ fun CartScreen(navController: NavController, cartViewModel: CartViewModel) {
                 // Sección de Pago
                 TotalSection(
                     total = total,
+                    isProcessing = isProcessing,
+                    errorMessage = lastError,
                     onPay = {
-                        if (total > 0) {
-                            navController.navigate("compra_exitosa")
-                        } else {
-                            navController.navigate("compra_rechazada")
+                        if (total <= 0 || isProcessing) return@TotalSection
+                        scope.launch {
+                            val result = cartViewModel.realizarCompra(
+                                currentUser = currentUser,
+                                buyerName = currentUser?.name ?: "Cliente App",
+                                buyerEmail = currentUser?.email ?: "cliente@example.com"
+                            )
+                            result.onSuccess {
+                                navController.navigate("compra_exitosa")
+                            }.onFailure {
+                                navController.navigate("compra_rechazada")
+                            }
                         }
                     },
                     onRetry = { navController.navigate("compra_rechazada") }
@@ -253,7 +279,7 @@ private fun CartItemCard(
 }
 
 @Composable
-private fun TotalSection(total: Int, onPay: () -> Unit, onRetry: () -> Unit) {
+private fun TotalSection(total: Int, isProcessing: Boolean, errorMessage: String?, onPay: () -> Unit, onRetry: () -> Unit) {
     Card(
         colors = CardDefaults.cardColors(containerColor = MenuBg),
         shape = RoundedCornerShape(16.dp),
@@ -281,6 +307,14 @@ private fun TotalSection(total: Int, onPay: () -> Unit, onRetry: () -> Unit) {
                 )
             }
 
+            if (!errorMessage.isNullOrBlank()) {
+                Text(
+                    text = errorMessage,
+                    color = ErrorRed,
+                    style = MaterialTheme.typography.bodySmall
+                )
+            }
+
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
@@ -300,6 +334,7 @@ private fun TotalSection(total: Int, onPay: () -> Unit, onRetry: () -> Unit) {
                 Button(
                     modifier = Modifier.weight(1f).height(50.dp),
                     onClick = onPay,
+                    enabled = total > 0 && !isProcessing,
                     colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
                     contentPadding = PaddingValues(),
                     shape = RoundedCornerShape(12.dp)
@@ -310,7 +345,11 @@ private fun TotalSection(total: Int, onPay: () -> Unit, onRetry: () -> Unit) {
                             .background(Brush.horizontalGradient(listOf(NeonCyan, NeonPurple))),
                         contentAlignment = Alignment.Center
                     ) {
-                        Text("Pagar Ahora", color = Color.White, fontWeight = FontWeight.Bold)
+                        if (isProcessing) {
+                            CircularProgressIndicator(color = Color.White, strokeWidth = 2.dp, modifier = Modifier.size(18.dp))
+                        } else {
+                            Text("Pagar Ahora", color = Color.White, fontWeight = FontWeight.Bold)
+                        }
                     }
                 }
             }

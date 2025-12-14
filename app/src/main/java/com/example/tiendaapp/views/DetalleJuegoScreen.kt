@@ -23,9 +23,13 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
+import coil.request.ImageRequest
 import com.example.tiendaapp.Helper.toClp
 import com.example.tiendaapp.viewmodel.CartViewModel
 import com.example.tiendaapp.viewmodel.JuegoViewModel
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
+import com.example.tiendaapp.R
 
 private val NeonCyan = Color(0xFF00E5FF)
 private val NeonPurple = Color(0xFFD500F9)
@@ -47,6 +51,13 @@ fun DetalleJuegoScreen(
 
     val juegoState by viewModel.getGameFlow(juegoId).collectAsState(initial = null)
     val juego = juegoState
+    val context = LocalContext.current
+    val imageRequest = remember(juego?.imageUrl) {
+        ImageRequest.Builder(context)
+            .data(juego?.imageUrl?.ifBlank { null })
+            .crossfade(true)
+            .build()
+    }
 
     Scaffold(
         containerColor = DarkBg,
@@ -86,12 +97,14 @@ fun DetalleJuegoScreen(
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         AsyncImage(
-                            model = juego.imageUrl ?: "",
+                            model = imageRequest,
                             contentDescription = "Carátula de ${juego.name}",
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .height(250.dp),
-                            contentScale = ContentScale.Crop
+                            contentScale = ContentScale.Crop,
+                            error = painterResource(id = R.drawable.ic_error),
+                            placeholder = painterResource(id = R.drawable.ic_launcher_foreground)
                         )
                     }
                 }
@@ -160,7 +173,7 @@ fun DetalleJuegoScreen(
                         Text("Descripción", style = MaterialTheme.typography.titleMedium, color = NeonPurple, fontWeight = FontWeight.Bold)
                         Spacer(modifier = Modifier.height(8.dp))
                         Text(
-                            text = "Sumérgete en esta aventura épica. " + (juego.name) + " ofrece gráficos impresionantes y una jugabilidad que desafiará tus habilidades...",
+                            text = juego.description ?: "Sumérgete en esta aventura épica. ${juego.name} ofrece gráficos impresionantes y una jugabilidad que desafiará tus habilidades...",
                             style = MaterialTheme.typography.bodyMedium,
                             color = TextWhite,
                             lineHeight = 22.sp
@@ -180,6 +193,7 @@ fun DetalleJuegoScreen(
                             .fillMaxWidth()
                             .height(54.dp),
                         shape = RoundedCornerShape(12.dp),
+                        enabled = (juego.stock > 0),
                         colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
                         contentPadding = PaddingValues()
                     ) {

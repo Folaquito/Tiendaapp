@@ -4,29 +4,46 @@ import android.util.Log
 import com.example.tiendaapp.data.local.JuegoDao
 import com.example.tiendaapp.data.remote.ApiService
 import com.example.tiendaapp.data.remote.BackendService
+import com.example.tiendaapp.data.remote.MicroserviceApiService
 import com.example.tiendaapp.model.JuegoEntity
 import com.example.tiendaapp.model.toEntity
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.firstOrNull
 
 class JuegoRepository(
     private val api: ApiService,
     private val dao: JuegoDao,
-    private val backend: com.example.tiendaapp.data.remote.BackendService,
-    private val microservice: com.example.tiendaapp.data.remote.MicroserviceApiService
+    private val backend: BackendService,
+    private val microservice: MicroserviceApiService
 ) {
 
     val games: Flow<List<JuegoEntity>> = dao.getAllGames()
 
     suspend fun refreshGames() {
         try {
-            val apiKey = com.example.tiendaapp.BuildConfig.RAWG_API_KEY
-            val response = api.getGames(apiKey = apiKey)
-
-            val gamesEntities = response.results.map { dto ->
-                dto.toEntity()
-            }
-
+            val productos = microservice.listarProductos()
+            val gamesEntities = productos.map { it.toEntity() }
+            dao.deleteAllGames()
             dao.insertGames(gamesEntities)
+
+            // Enriquecer con datos RAWG para filtros (género/plataforma) cuando haya rawgGameId
+            gamesEntities.forEach { entity ->
+                val rawgId = entity.rawgGameId ?: return@forEach
+                try {
+                    val apiKey = com.example.tiendaapp.BuildConfig.RAWG_API_KEY
+                    val detail = api.getGameDetail(rawgId, apiKey)
+                    val enriched = entity.copy(
+                        description = detail.description ?: entity.description,
+                        imageUrl = if (entity.imageUrl.isBlank()) detail.backgroundImage ?: entity.imageUrl else entity.imageUrl,
+                        genres = detail.genres ?: entity.genres,
+                        platforms = detail.platforms ?: entity.platforms,
+                        esrbRating = detail.esrbRating?.name ?: entity.esrbRating
+                    )
+                    dao.insertGames(listOf(enriched))
+                } catch (e: Exception) {
+                    Log.w("GamesRepository", "RAWG enrich failed for $rawgId: ${e.message}")
+                }
+            }
 
         } catch (e: Exception) {
             Log.e("GamesRepository", "Error fetching data: ${e.message}")
@@ -37,12 +54,19 @@ class JuegoRepository(
 
     suspend fun fetchGameDescription(id: Int) {
         try {
+            val current = dao.getGameById(id).firstOrNull() ?: return
+            val rawgId = current.rawgGameId ?: return
             val apiKey = com.example.tiendaapp.BuildConfig.RAWG_API_KEY
-            val response = api.getGameDetail(id, apiKey)
+            val response = api.getGameDetail(rawgId, apiKey)
 
-            if (response.description.isNotEmpty()) {
-                dao.updateGameDescription(id, response.description)
-            }
+            val updated = current.copy(
+                description = response.description ?: current.description,
+                imageUrl = if (current.imageUrl.isBlank()) response.backgroundImage ?: current.imageUrl else current.imageUrl,
+                genres = response.genres ?: current.genres,
+                platforms = response.platforms ?: current.platforms,
+                esrbRating = response.esrbRating?.name ?: current.esrbRating
+            )
+            dao.insertGames(listOf(updated))
         } catch (e: Exception) {
             e.printStackTrace()
         }

@@ -15,6 +15,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.tiendaapp.viewmodel.LoginViewModel
+import androidx.compose.runtime.rememberCoroutineScope
+import kotlinx.coroutines.launch
 
 private val NeonCyan = Color(0xFF00E5FF)
 private val NeonPurple = Color(0xFFD500F9)
@@ -29,6 +31,7 @@ fun LoginScreen(navController: NavController, viewModel: LoginViewModel) {
     var password by remember { mutableStateOf("") }
     var emailError by remember { mutableStateOf<String?>(null) }
     var passwordError by remember { mutableStateOf<String?>(null) }
+    val scope = rememberCoroutineScope()
 
     fun validarEmail(valor: String): Boolean {
         val regex = "^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+$".toRegex()
@@ -133,8 +136,11 @@ fun LoginScreen(navController: NavController, viewModel: LoginViewModel) {
                 if (email == "admin@gmail.com" && password == "Admin123") {
                     navController.navigate("backoffice")
                 } else {
-                    if (viewModel.login(email, password)) {
-                        navController.navigate("home/$email")
+                    scope.launch {
+                        viewModel.login(email, password,
+                            onSuccess = { navController.navigate("home/$email") },
+                            onError = { }
+                        )
                     }
                 }
             },

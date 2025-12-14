@@ -9,6 +9,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
@@ -20,6 +21,7 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.tiendaapp.viewmodel.LoginViewModel
 import com.example.tiendaapp.R
+import kotlinx.coroutines.launch
 
 private val NeonCyan = Color(0xFF00E5FF)
 private val NeonPurple = Color(0xFFD500F9)
@@ -54,6 +56,7 @@ fun RegisterScreen(navController: NavController, viewModel: LoginViewModel) {
     val rutErrorMessage by viewModel.rutError
     var emailError by remember { mutableStateOf<String?>(null) }
     var passwordError by remember { mutableStateOf<String?>(null) }
+    val scope = rememberCoroutineScope()
 
     // --- FUNCIONES DE VALIDACIÓN ---
     fun validarEmail(input: String): Boolean {
@@ -257,7 +260,19 @@ fun RegisterScreen(navController: NavController, viewModel: LoginViewModel) {
         GamerButton(
             text = "Registrar",
             onClick = {
-                viewModel.registrar(nombre, email, password, rut, direccion, region, comuna)
+                scope.launch {
+                    viewModel.registrar(
+                        nombre,
+                        email,
+                        password,
+                        rut,
+                        direccion,
+                        region,
+                        comuna,
+                        onSuccess = { navController.navigate("home/${'$'}{it.email}") },
+                        onError = { }
+                    )
+                }
             },
             enabled = isButtonEnabled
         )

@@ -18,6 +18,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
+import coil.request.ImageRequest
 import com.example.tiendaapp.Helper.toClp
 import com.example.tiendaapp.model.JuegoEntity
 import com.example.tiendaapp.viewmodel.CartViewModel
@@ -25,6 +26,9 @@ import com.example.tiendaapp.viewmodel.JuegoViewModel
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
+import com.example.tiendaapp.R
 
 // --- COLORES GLOBALES (Mismos de las otras pantallas) ---
 private val NeonCyan = Color(0xFF00E5FF)
@@ -303,6 +307,13 @@ fun JuegoCard(
     onClick: () -> Unit,
     onAddToCart: () -> Unit
 ) {
+    val context = LocalContext.current
+    val imageModel = remember(juego.imageUrl) {
+        ImageRequest.Builder(context)
+            .data(juego.imageUrl.ifBlank { null })
+            .crossfade(true)
+            .build()
+    }
     Card(
         onClick = onClick,
         modifier = Modifier.fillMaxWidth(),
@@ -315,12 +326,14 @@ fun JuegoCard(
         Column {
             Box {
                 AsyncImage(
-                    model = juego.imageUrl,
+                    model = imageModel,
                     contentDescription = "Imagen de ${juego.name}",
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(180.dp),
                     contentScale = ContentScale.Crop,
+                    error = painterResource(id = R.drawable.ic_error),
+                    placeholder = painterResource(id = R.drawable.ic_launcher_foreground)
                 )
 
                 // Rating Chip
@@ -411,6 +424,7 @@ fun JuegoCard(
                     // Usamos un Box pequeño para replicar el efecto
                     Button(
                         onClick = onAddToCart,
+                        enabled = juego.stock > 0,
                         colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
                         contentPadding = PaddingValues(),
                         modifier = Modifier.height(36.dp),
@@ -431,7 +445,11 @@ fun JuegoCard(
                                     tint = Color.White
                                 )
                                 Spacer(modifier = Modifier.width(4.dp))
-                                Text("Agregar", color = Color.White, fontSize = 14.sp)
+                                Text(
+                                    if (juego.stock > 0) "Agregar" else "Sin stock",
+                                    color = Color.White,
+                                    fontSize = 14.sp
+                                )
                             }
                         }
                     }

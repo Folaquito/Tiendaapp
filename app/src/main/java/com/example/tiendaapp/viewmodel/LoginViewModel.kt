@@ -2,36 +2,66 @@ package com.example.tiendaapp.viewmodel
 
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
-import com.example.tiendaapp.model.FakeDatabase
-import com.example.tiendaapp.model.Usuario
+import androidx.lifecycle.viewModelScope
+import com.example.tiendaapp.data.remote.AuthResponse
+import com.example.tiendaapp.data.remote.LoginRequest
+import com.example.tiendaapp.data.remote.MicroserviceClient
+import com.example.tiendaapp.data.remote.RegisterRequest
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
 
 class LoginViewModel : ViewModel() {
     var mensaje = mutableStateOf("")
     var usuarioActual = mutableStateOf<String?>(null)
     var rutError = mutableStateOf<String?>(null)
 
-    fun registrar(nombre: String, email: String, password: String, rut: String, direccion: String, region: String, comuna: String) {
+    private val _currentUser = MutableStateFlow<AuthResponse?>(null)
+    val currentUser: StateFlow<AuthResponse?> = _currentUser.asStateFlow()
+
+    fun registrar(
+        nombre: String,
+        email: String,
+        password: String,
+        rut: String,
+        direccion: String,
+        region: String,
+        comuna: String,
+        onSuccess: (AuthResponse) -> Unit = {},
+        onError: (String) -> Unit = {}
+    ) {
         if (!validarRut(rut)) {
             mensaje.value = "Registro fallido. Verifica el RUT."
             return
         }
         rutError.value = null
-        val nuevo = Usuario(nombre, email, password, rut, direccion)
-        if (FakeDatabase.registrar(nuevo)) {
-            mensaje.value = "Registro exitoso ✅"
-        } else {
-            mensaje.value = "El usuario ya existe ❌"
+        viewModelScope.launch {
+            try {
+                val response = MicroserviceClient.api.register(RegisterRequest(nombre, email, password))
+                _currentUser.value = response
+                usuarioActual.value = response.email
+                mensaje.value = "Registro exitoso ✅"
+                onSuccess(response)
+            } catch (e: Exception) {
+                mensaje.value = e.message ?: "Error en registro"
+                onError(e.message ?: "Error en registro")
+            }
         }
     }
 
-    fun login(email: String, password: String): Boolean {
-        return if (FakeDatabase.login(email, password)) {
-            usuarioActual.value = email
-            mensaje.value = "Inicio de sesión exitoso 🎉"
-            true
-        } else {
-            mensaje.value = "Credenciales inválidas ❌"
-            false
+    fun login(email: String, password: String, onSuccess: () -> Unit = {}, onError: (String) -> Unit = {}) {
+        viewModelScope.launch {
+            try {
+                val response = MicroserviceClient.api.login(LoginRequest(email, password))
+                _currentUser.value = response
+                usuarioActual.value = response.email
+                mensaje.value = "Inicio de sesión exitoso 🎉"
+                onSuccess()
+            } catch (e: Exception) {
+                mensaje.value = "Credenciales inválidas ❌"
+                onError(e.message ?: "Error de inicio de sesión")
+            }
         }
     }
     private fun limpiarRut(rut: String): Pair<String, Char>? {

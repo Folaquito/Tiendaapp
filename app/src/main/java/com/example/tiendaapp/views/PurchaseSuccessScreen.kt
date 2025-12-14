@@ -23,7 +23,6 @@ import androidx.navigation.NavController
 import com.example.tiendaapp.Helper.toClp
 import com.example.tiendaapp.model.CartItem
 import com.example.tiendaapp.viewmodel.CartViewModel
-import kotlin.math.roundToInt
 
 private val NeonCyan = Color(0xFF00E5FF)
 private val NeonPurple = Color(0xFFD500F9)
@@ -37,18 +36,14 @@ private val SuccessGreen = Color(0xFF00E676)
 fun PurchaseSuccessScreen(navController: NavController, cartViewModel: CartViewModel) {
 
     val currentItems by cartViewModel.items.collectAsState()
+    val lastPurchase by cartViewModel.lastPurchase.collectAsState()
 
-    val itemsToDisplay = remember(currentItems) { currentItems }
+    val itemsToDisplay = lastPurchase?.items ?: currentItems
+    val keysByGameId = lastPurchase?.keysByGameId
 
-    val generatedKeys = remember(itemsToDisplay) {
-        itemsToDisplay.associate { item ->
-            item.game.id to generateRandomKey()
-        }
-    }
-
-    val total = cartViewModel.calcularTotal()
-    val neto = (total / 1.19).roundToInt()
-    val iva = total - neto
+    val total = lastPurchase?.total ?: cartViewModel.calcularTotal()
+    val neto = lastPurchase?.net ?: ((total / 1.19)).toInt()
+    val iva = lastPurchase?.vat ?: (total - neto)
 
     Scaffold(
         containerColor = DarkBg,
@@ -107,13 +102,24 @@ fun PurchaseSuccessScreen(navController: NavController, cartViewModel: CartViewM
                         modifier = Modifier.fillMaxWidth(),
                         textAlign = TextAlign.Center
                     )
+                    lastPurchase?.orderId?.let { orderId ->
+                        Text(
+                            text = "Orden: $orderId",
+                            color = NeonCyan,
+                            style = MaterialTheme.typography.labelLarge,
+                            modifier = Modifier.fillMaxWidth(),
+                            textAlign = TextAlign.Center,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
                     Divider(modifier = Modifier.padding(vertical = 12.dp), color = Color.Gray.copy(0.3f))
 
                     itemsToDisplay.forEach { item ->
+                        val deliveredKeys = keysByGameId?.get(item.game.rawgGameId ?: item.game.id)
                         GameReceiptItem(
                             name = item.game.name,
                             price = item.game.price * item.cantidad,
-                            gameKey = generatedKeys[item.game.id] ?: "ERROR-KEY"
+                            deliveredKeys = deliveredKeys
                         )
                         Spacer(modifier = Modifier.height(12.dp))
                     }
@@ -167,7 +173,7 @@ fun PurchaseSuccessScreen(navController: NavController, cartViewModel: CartViewM
 }
 
 @Composable
-fun GameReceiptItem(name: String, price: Int, gameKey: String) {
+fun GameReceiptItem(name: String, price: Int, deliveredKeys: List<String>?) {
     Column(modifier = Modifier.fillMaxWidth()) {
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -187,14 +193,24 @@ fun GameReceiptItem(name: String, price: Int, gameKey: String) {
 
         Spacer(modifier = Modifier.height(4.dp))
 
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Text("Key: ", color = Color.Gray, fontSize = 12.sp)
+        if (!deliveredKeys.isNullOrEmpty()) {
+            deliveredKeys.forEach { key ->
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text("Key: ", color = Color.Gray, fontSize = 12.sp)
+                    Text(
+                        text = key,
+                        color = NeonPurple,
+                        fontFamily = FontFamily.Monospace,
+                        fontSize = 13.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            }
+        } else {
             Text(
-                text = gameKey,
-                color = NeonPurple,
-                fontFamily = FontFamily.Monospace,
-                fontSize = 13.sp,
-                fontWeight = FontWeight.Bold
+                text = "Keys: no disponibles",
+                color = Color.Gray,
+                style = MaterialTheme.typography.bodySmall
             )
         }
     }
@@ -211,9 +227,3 @@ fun PriceRow(label: String, amount: Int) {
     }
 }
 
-fun generateRandomKey(): String {
-    val chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
-    return (1..4).joinToString("-") {
-        (1..4).map { chars.random() }.joinToString("")
-    }
-}

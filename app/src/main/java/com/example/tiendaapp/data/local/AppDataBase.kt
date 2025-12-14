@@ -9,7 +9,7 @@ import com.example.tiendaapp.model.JuegoEntity
 
 @Database(
     entities = [JuegoEntity::class],
-    version = 4,
+    version = 5,
     exportSchema = false
 )
 @TypeConverters(Converters::class)
