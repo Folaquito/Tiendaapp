@@ -15,7 +15,10 @@ fun Juego.toEntity(): JuegoEntity {
             else -> 14990
         },
         stock = 0,
-        description = null
+        description = null,
+        genres = this.genres,
+        platforms = this.platforms,
+        esrbRating = this.esrbRating?.name
     )
 }
 
@@ -26,14 +29,17 @@ fun ProductoDto.toEntity(): JuegoEntity = JuegoEntity(
     rating = valoracion,
     price = precio,
     stock = stock,
-    description = descripcion
+    description = descripcion,
+    genres = null,
+    platforms = null,
+    esrbRating = null
 )
 
 fun JuegoEntity.toProductoDto(): ProductoDto = ProductoDto(
     id = id.toLong(),
     nombre = name,
     descripcion = description ?: "Sin descripción",
-    imagen = imageUrl,
+    imagen = imageUrl ?: "",
     precio = price,
     valoracion = rating,
     stock = stock

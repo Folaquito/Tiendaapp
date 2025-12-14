@@ -19,32 +19,6 @@ import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 
-@OptIn(ExperimentalCoroutinesApi::class)
-class JuegoViewModelTest {
-
-    private lateinit var repository: JuegoRepository
-    private lateinit var viewModel: JuegoViewModel
-    private val testDispatcher = StandardTestDispatcher()
-package com.example.tiendaapp.viewmodel
-
-import com.example.tiendaapp.data.remote.FavoriteGameDto
-import com.example.tiendaapp.model.JuegoEntity
-import com.example.tiendaapp.repository.JuegoRepository
-import io.mockk.coEvery
-import io.mockk.coVerify
-import io.mockk.mockk
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.flow.flowOf
-import kotlinx.coroutines.test.StandardTestDispatcher
-import kotlinx.coroutines.test.resetMain
-import kotlinx.coroutines.test.runTest
-import kotlinx.coroutines.test.setMain
-import org.junit.After
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertTrue
-import org.junit.Before
-import org.junit.Test
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class JuegoViewModelTest {
@@ -97,7 +71,7 @@ class JuegoViewModelTest {
 
     @Test
     fun `toggleFavorite adds favorite if not exists`() = runTest {
-        val game = JuegoEntity(101, "Game 1", "url", 4.5, 1000, "desc")
+        val game = JuegoEntity(101, "Game 1", "url", 4.5, 1000, 15,"desc")
         coEvery { repository.getFavorites() } returns emptyList()
 
         viewModel.toggleFavorite(game)
@@ -108,7 +82,7 @@ class JuegoViewModelTest {
 
     @Test
     fun `toggleFavorite removes favorite if exists`() = runTest {
-        val game = JuegoEntity(101, "Game 1", "url", 4.5, 1000, "desc")
+        val game = JuegoEntity(101, "Game 1", "url", 4.5, 1000, 15,"desc")
         val favorites = listOf(FavoriteGameDto(1, 101, "Game 1", "url"))
         coEvery { repository.getFavorites() } returns favorites
 
@@ -124,7 +98,7 @@ class JuegoViewModelTest {
 
     @Test
     fun `toggleFavorite reloads favorites after action`() = runTest {
-        val game = JuegoEntity(101, "Game 1", "url", 4.5, 1000, "desc")
+        val game = JuegoEntity(101, "Game 1", "url", 4.5, 1000, 15,"desc")
         coEvery { repository.getFavorites() } returns emptyList()
 
         viewModel.toggleFavorite(game)

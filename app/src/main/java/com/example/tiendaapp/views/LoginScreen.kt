@@ -1,13 +1,28 @@
 package com.example.tiendaapp.views
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.tiendaapp.viewmodel.LoginViewModel
 
+private val NeonCyan = Color(0xFF00E5FF)
+private val NeonPurple = Color(0xFFD500F9)
+private val DarkBg = Color(0xFF0B1221)
+private val TextWhite = Color(0xFFEEEEEE)
+private val ErrorRed = Color(0xFFFF5252)
+
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LoginScreen(navController: NavController, viewModel: LoginViewModel) {
     var email by remember { mutableStateOf("") }
@@ -24,13 +39,24 @@ fun LoginScreen(navController: NavController, viewModel: LoginViewModel) {
 
     val canSubmit = email.isNotBlank() && password.isNotBlank() &&
             emailError == null && passwordError == null
+
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(20.dp),
-        verticalArrangement = Arrangement.Center
+            .background(DarkBg)
+            .padding(24.dp),
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Text("Inicio de Sesión", style = MaterialTheme.typography.titleLarge)
+
+        Text(
+            text = "Inicio de Sesión",
+            style = MaterialTheme.typography.headlineMedium,
+            color = TextWhite,
+            fontWeight = FontWeight.Bold
+        )
+
+        Spacer(modifier = Modifier.height(32.dp))
 
         OutlinedTextField(
             value = email,
@@ -44,10 +70,27 @@ fun LoginScreen(navController: NavController, viewModel: LoginViewModel) {
             },
             label = { Text("Email") },
             isError = emailError != null,
-            supportingText = {
-                emailError?.let { Text(it) }
-            }
+            supportingText = { emailError?.let { Text(it, color = ErrorRed) } },
+            singleLine = true,
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(12.dp),
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = NeonCyan,
+                unfocusedBorderColor = Color.Gray,
+                focusedLabelColor = NeonCyan,
+                unfocusedLabelColor = Color.Gray,
+                focusedTextColor = TextWhite,
+                unfocusedTextColor = TextWhite,
+                cursorColor = NeonCyan,
+                errorBorderColor = ErrorRed,
+                errorLabelColor = ErrorRed,
+                focusedContainerColor = Color.Transparent,
+                unfocusedContainerColor = Color.Transparent
+            )
         )
+
+        Spacer(modifier = Modifier.height(16.dp))
+
         OutlinedTextField(
             value = password,
             onValueChange = {
@@ -60,29 +103,65 @@ fun LoginScreen(navController: NavController, viewModel: LoginViewModel) {
             },
             label = { Text("Contraseña") },
             isError = passwordError != null,
-            supportingText = {
-                passwordError?.let { Text(it) }
-            }
+            supportingText = { passwordError?.let { Text(it, color = ErrorRed) } },
+            visualTransformation = PasswordVisualTransformation(),
+            singleLine = true,
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(12.dp),
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = NeonCyan,
+                unfocusedBorderColor = Color.Gray,
+                focusedLabelColor = NeonCyan,
+                unfocusedLabelColor = Color.Gray,
+                focusedTextColor = TextWhite,
+                unfocusedTextColor = TextWhite,
+                cursorColor = NeonCyan,
+                errorBorderColor = ErrorRed,
+                errorLabelColor = ErrorRed,
+                focusedContainerColor = Color.Transparent,
+                unfocusedContainerColor = Color.Transparent
+            )
         )
 
-        Spacer(modifier = Modifier.height(10.dp))
+        Spacer(modifier = Modifier.height(32.dp))
+
+        val gradientColors = if (canSubmit) listOf(NeonCyan, NeonPurple) else listOf(Color.Gray, Color.DarkGray)
+        val brush = Brush.horizontalGradient(gradientColors)
 
         Button(
             onClick = {
                 if (email == "admin@gmail.com" && password == "Admin123") {
                     navController.navigate("backoffice")
-                }
-                else {
+                } else {
                     if (viewModel.login(email, password)) {
                         navController.navigate("home/$email")
-                    } else {
                     }
                 }
             },
             enabled = canSubmit,
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(50.dp),
+            shape = RoundedCornerShape(12.dp),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = Color.Transparent,
+                disabledContainerColor = Color.Transparent
+            ),
+            contentPadding = PaddingValues()
         ) {
-            Text("Entrar")
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(brush),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = "Entrar",
+                    color = if(canSubmit) Color.White else Color.LightGray,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 16.sp
+                )
+            }
         }
     }
 }

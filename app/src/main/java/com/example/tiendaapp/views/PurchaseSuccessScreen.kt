@@ -1,59 +1,62 @@
 package com.example.tiendaapp.views
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material3.Button
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.runtime.Composable
+import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Home
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import com.example.tiendaapp.Helper.toClp
+import com.example.tiendaapp.model.CartItem
 import com.example.tiendaapp.viewmodel.CartViewModel
-import com.example.tiendaapp.R
+import kotlin.math.roundToInt
+
+private val NeonCyan = Color(0xFF00E5FF)
+private val NeonPurple = Color(0xFFD500F9)
+private val DarkBg = Color(0xFF0B1221)
+private val MenuBg = Color(0xFF1F2536)
+private val TextWhite = Color(0xFFEEEEEE)
+private val SuccessGreen = Color(0xFF00E676)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PurchaseSuccessScreen(navController: NavController, cartViewModel: CartViewModel) {
+
+    val currentItems by cartViewModel.items.collectAsState()
+
+    val itemsToDisplay = remember(currentItems) { currentItems }
+
+    val generatedKeys = remember(itemsToDisplay) {
+        itemsToDisplay.associate { item ->
+            item.game.id to generateRandomKey()
+        }
+    }
+
     val total = cartViewModel.calcularTotal()
+    val neto = (total / 1.19).roundToInt()
+    val iva = total - neto
 
     Scaffold(
+        containerColor = DarkBg,
         topBar = {
             TopAppBar(
-                title = { Text("Compra exitosa") },
-                navigationIcon = {
-                    IconButton(onClick = {
-                        navController.popBackStack("catalogo", inclusive = false)
-                    }) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Volver")
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.primary,
-                    titleContentColor = MaterialTheme.colorScheme.onPrimary,
-                    navigationIconContentColor = MaterialTheme.colorScheme.onPrimary
-                )
+                title = { },
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = DarkBg),
+                navigationIcon = {}
             )
         }
     ) { padding ->
@@ -61,49 +64,156 @@ fun PurchaseSuccessScreen(navController: NavController, cartViewModel: CartViewM
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .padding(24.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+                .padding(24.dp)
+                .verticalScroll(rememberScrollState()),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Image(
-                painter = painterResource(id = R.drawable.ic_success),
-                contentDescription = "Compra confirmada",
-                modifier = Modifier.size(96.dp)
+
+            Icon(
+                imageVector = Icons.Default.CheckCircle,
+                contentDescription = "Éxito",
+                tint = SuccessGreen,
+                modifier = Modifier.size(80.dp)
             )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
             Text(
-                text = "¡Compra confirmada!",
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold
+                text = "¡Misión Cumplida!",
+                style = MaterialTheme.typography.headlineMedium,
+                fontWeight = FontWeight.Bold,
+                color = TextWhite
             )
-            Text("Tu pedido ha sido procesado exitosamente")
-            OrderSummary(total)
-            Button(onClick = {
-                cartViewModel.vaciarCarrito()
-                navController.navigate("catalogo") {
-                    popUpTo("catalogo") { inclusive = true }
+
+            Text(
+                text = "Tu inventario ha sido actualizado.",
+                color = Color.Gray,
+                style = MaterialTheme.typography.bodyMedium
+            )
+
+            Spacer(modifier = Modifier.height(32.dp))
+
+            Card(
+                colors = CardDefaults.cardColors(containerColor = MenuBg),
+                shape = RoundedCornerShape(16.dp),
+                modifier = Modifier.fillMaxWidth(),
+                elevation = CardDefaults.cardElevation(8.dp)
+            ) {
+                Column(modifier = Modifier.padding(20.dp)) {
+                    Text(
+                        text = "RECIBO DIGITAL",
+                        color = Color.Gray,
+                        style = MaterialTheme.typography.labelMedium,
+                        modifier = Modifier.fillMaxWidth(),
+                        textAlign = TextAlign.Center
+                    )
+                    Divider(modifier = Modifier.padding(vertical = 12.dp), color = Color.Gray.copy(0.3f))
+
+                    itemsToDisplay.forEach { item ->
+                        GameReceiptItem(
+                            name = item.game.name,
+                            price = item.game.price * item.cantidad,
+                            gameKey = generatedKeys[item.game.id] ?: "ERROR-KEY"
+                        )
+                        Spacer(modifier = Modifier.height(12.dp))
+                    }
+
+                    Divider(modifier = Modifier.padding(vertical = 12.dp), color = Color.Gray.copy(0.3f))
+
+                    PriceRow(label = "Neto", amount = neto)
+                    PriceRow(label = "IVA (19%)", amount = iva)
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text("TOTAL", color = TextWhite, fontWeight = FontWeight.Bold, fontSize = 18.sp)
+                        Text(total.toClp(), color = NeonCyan, fontWeight = FontWeight.Bold, fontSize = 20.sp)
+                    }
                 }
-            }) {
-                Text("Volver al catálogo")
+            }
+
+            Spacer(modifier = Modifier.height(40.dp))
+            Button(
+                onClick = {
+                    cartViewModel.vaciarCarrito()
+                    navController.navigate("catalogo") {
+                        popUpTo("catalogo") { inclusive = true }
+                    }
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(50.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
+                contentPadding = PaddingValues(),
+                shape = RoundedCornerShape(12.dp)
+            ) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(Brush.horizontalGradient(listOf(NeonCyan, NeonPurple))),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(Icons.Default.Home, contentDescription = null, tint = Color.White)
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("Volver al Catálogo", color = Color.White, fontWeight = FontWeight.Bold)
+                    }
+                }
             }
         }
     }
 }
 
 @Composable
-private fun OrderSummary(total: Int) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant
-        )
-    ) {
-        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                Text("Total pagado")
-                Text("$${total}", fontWeight = FontWeight.Bold)
-            }
-            Text("Un correo de confirmación llegará en minutos")
+fun GameReceiptItem(name: String, price: Int, gameKey: String) {
+    Column(modifier = Modifier.fillMaxWidth()) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Text(
+                text = name,
+                color = TextWhite,
+                fontWeight = FontWeight.SemiBold,
+                modifier = Modifier.weight(1f)
+            )
+            Text(
+                text = price.toClp(),
+                color = TextWhite
+            )
+        }
+
+        Spacer(modifier = Modifier.height(4.dp))
+
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text("Key: ", color = Color.Gray, fontSize = 12.sp)
+            Text(
+                text = gameKey,
+                color = NeonPurple,
+                fontFamily = FontFamily.Monospace,
+                fontSize = 13.sp,
+                fontWeight = FontWeight.Bold
+            )
         }
     }
-    Spacer(Modifier.height(8.dp))
+}
+
+@Composable
+fun PriceRow(label: String, amount: Int) {
+    Row(
+        modifier = Modifier.fillMaxWidth().padding(vertical = 2.dp),
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        Text(text = label, color = Color.Gray, fontSize = 14.sp)
+        Text(text = amount.toClp(), color = Color.Gray, fontSize = 14.sp)
+    }
+}
+
+fun generateRandomKey(): String {
+    val chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+    return (1..4).joinToString("-") {
+        (1..4).map { chars.random() }.joinToString("")
+    }
 }

@@ -12,5 +12,8 @@ data class JuegoEntity(
     val rating: Double,
     val price: Int,
     val stock: Int = 0,
-    val description: String? = null
+    val description: String? = null,
+    val genres: List<Genre>?,
+    val platforms: List<PlatformContainer>?,
+    val esrbRating: String?
 )
