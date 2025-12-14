@@ -31,4 +31,10 @@ interface MicroserviceApiService {
 
     @DELETE("api/productos/{id}")
     suspend fun eliminarProducto(@Path("id") id: Long)
+
+    @POST("api/compras")
+    suspend fun crearCompra(@Body request: PurchaseRequest): PurchaseResponse
+
+    @GET("api/compras/{id}")
+    suspend fun obtenerCompra(@Path("id") id: Long): PurchaseResponse
 }

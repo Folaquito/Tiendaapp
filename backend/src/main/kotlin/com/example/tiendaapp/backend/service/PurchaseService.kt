@@ -15,12 +15,12 @@ import com.example.tiendaapp.backend.repository.KeyRepository
 import com.example.tiendaapp.backend.repository.ProductoRepository
 import com.example.tiendaapp.backend.repository.PurchaseItemRepository
 import com.example.tiendaapp.backend.repository.PurchaseRepository
+import com.example.tiendaapp.backend.repository.UserRepository
+import org.springframework.http.HttpStatus
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.data.domain.PageRequest
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
-import com.example.tiendaapp.backend.repository.UserRepository
-import org.springframework.http.HttpStatus
 import org.springframework.web.server.ResponseStatusException
 import java.time.Instant
 import java.time.format.DateTimeFormatter
@@ -40,8 +40,8 @@ class PurchaseService(
 
     @Transactional
     fun createPurchase(request: PurchaseRequest): PurchaseResponse {
-        val buyerUser = request.userId?.let { userId ->
-            userRepository.findById(userId).orElse(null)
+        val buyerUser = request.userId?.let { id ->
+            userRepository.findById(id).orElse(null)
                 ?: throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Usuario no encontrado")
         }
 
@@ -118,7 +118,7 @@ class PurchaseService(
         return PurchaseResponse(
             purchaseId = savedPurchase.id,
             orderNumber = savedPurchase.orderNumber,
-            buyer = BuyerResponse(savedPurchase.buyerUserId, savedPurchase.buyerName, savedPurchase.buyerEmail),
+            buyer = BuyerResponse(buyerUser?.id, buyerName, buyerEmail),
             items = responseItems,
             summary = summary,
             createdAt = DateTimeFormatter.ISO_INSTANT.format(savedPurchase.createdAt)
@@ -176,6 +176,7 @@ class PurchaseService(
         } ?: throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Producto no encontrado para la compra")
 
         val rawgId = item.rawgGameId ?: producto.rawgGameId
+            ?: throw ResponseStatusException(HttpStatus.BAD_REQUEST, "rawgGameId es requerido")
         val available = keyRepository.countByProductoAndStatus(producto, KeyStatus.AVAILABLE)
         if (available < item.quantity) {
             throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Stock insuficiente para el producto ${producto.nombre}")

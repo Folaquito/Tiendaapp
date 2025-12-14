@@ -15,7 +15,7 @@ data class PurchaseRequest(
 
 data class PurchaseItemResponse(
     val productId: Long,
-    val rawgGameId: Long,
+    val rawgGameId: Long?,
     val name: String,
     val unitPrice: Int,
     val quantity: Int,
@@ -42,7 +42,7 @@ data class PurchaseResponse(
 )
 
 data class BuyerResponse(
-    val id: Long?,
+    val id: Long? = null,
     val name: String,
     val email: String
 )
