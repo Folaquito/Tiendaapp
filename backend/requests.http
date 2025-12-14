@@ -2,8 +2,6 @@
 GET http://localhost:8081/api/productos
 Accept: application/json
 
-# Nota: el backend no expone endpoints /favorites. Las llamadas de frontend a favoritos se limpian devolviendo lista vacía.
-
 ### Crear producto
 POST http://localhost:8081/api/productos
 Accept: application/json
@@ -95,4 +93,25 @@ Content-Type: application/json
   "items": [
     { "rawgGameId": 326242, "quantity": 1 }
   ]
+}
+
+### Registro
+POST http://localhost:8081/api/auth/register
+Accept: application/json
+Content-Type: application/json
+
+{
+  "name": "Demo",
+  "email": "demo@example.com",
+  "password": "secret123"
+}
+
+### Login
+POST http://localhost:8081/api/auth/login
+Accept: application/json
+Content-Type: application/json
+
+{
+  "email": "demo@example.com",
+  "password": "secret123"
 }
