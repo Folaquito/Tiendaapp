@@ -13,6 +13,8 @@ data class Producto(
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     val id: Long = 0,
+    @Column(name = "rawg_game_id")
+    val rawgGameId: Long? = null,
     val nombre: String = "",
     val descripcion: String = "",
     val imagen: String = "",

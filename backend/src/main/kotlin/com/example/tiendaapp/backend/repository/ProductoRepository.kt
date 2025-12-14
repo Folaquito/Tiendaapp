@@ -5,4 +5,6 @@ import org.springframework.data.repository.CrudRepository
 import org.springframework.stereotype.Repository
 
 @Repository
-interface ProductoRepository : CrudRepository<Producto, Long>
+interface ProductoRepository : CrudRepository<Producto, Long> {
+    fun findByRawgGameId(rawgGameId: Long?): Producto?
+}
