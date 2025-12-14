@@ -1,0 +1,98 @@
+### Listar productos
+GET http://localhost:8081/api/productos
+Accept: application/json
+
+# Nota: el backend no expone endpoints /favorites. Las llamadas de frontend a favoritos se limpian devolviendo lista vacía.
+
+### Crear producto
+POST http://localhost:8081/api/productos
+Accept: application/json
+Content-Type: application/json
+
+{
+  "nombre": "Juego demo",
+  "descripcion": "Descripción",
+  "imagen": "https://example.com/demo.jpg",
+  "precio": 19990,
+  "valoracion": 4.2,
+  "stock": 5,
+  "rawgGameId": 12345
+}
+
+### Obtener producto por id
+GET http://localhost:8081/api/productos/1
+Accept: application/json
+
+### Actualizar producto
+PUT http://localhost:8081/api/productos/1
+Accept: application/json
+Content-Type: application/json
+
+{
+  "id": 1,
+  "nombre": "Juego demo editado",
+  "descripcion": "Descripción",
+  "imagen": "https://example.com/demo.jpg",
+  "precio": 20990,
+  "valoracion": 4.3,
+  "stock": 8,
+  "rawgGameId": 12345
+}
+
+### Eliminar producto
+DELETE http://localhost:8081/api/productos/1
+Accept: application/json
+
+### Cargar keys para un producto
+POST http://localhost:8081/api/keys/cargar
+Accept: application/json
+Content-Type: application/json
+
+{
+  "productId": 1,
+  "quantity": 3
+}
+
+### Crear compra
+POST http://localhost:8081/api/compras
+Accept: application/json
+Content-Type: application/json
+
+{
+  "buyerName": "Ana Perez",
+  "buyerEmail": "ana@example.com",
+  "items": [
+    { "productoId": 1, "quantity": 2 }
+  ]
+}
+
+### Obtener compra por id
+GET http://localhost:8081/api/compras/1
+Accept: application/json
+
+### Importar desde RAWG (crea o actualiza por rawgId)
+POST http://localhost:8081/api/productos/import/rawg/326242
+Accept: application/json
+Content-Type: application/json
+
+{
+  "precio": 34990,
+  "stock": 5
+}
+
+### Importar página de RAWG (bulk)
+POST http://localhost:8081/api/productos/import/rawg?page=1&pageSize=10&precio=29990&stock=5
+Accept: application/json
+
+### Compra usando rawgGameId (cuando no sabes el id interno)
+POST http://localhost:8081/api/compras
+Accept: application/json
+Content-Type: application/json
+
+{
+  "buyerName": "Cliente RAWG",
+  "buyerEmail": "cliente@example.com",
+  "items": [
+    { "rawgGameId": 326242, "quantity": 1 }
+  ]
+}
