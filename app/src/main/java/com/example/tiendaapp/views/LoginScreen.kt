@@ -41,33 +41,37 @@ fun LoginScreen(navController: NavController, viewModel: LoginViewModel) {
     var password by remember { mutableStateOf("") }
     var emailError by remember { mutableStateOf<String?>(null) }
     var passwordError by remember { mutableStateOf<String?>(null) }
+
+    // --- NUEVO: Estado de Carga Local ---
+    var isLoading by remember { mutableStateOf(false) }
+    // ------------------------------------
+
+    val loginMessage by remember { viewModel.mensaje }
     val context = LocalContext.current
     val activity = context as? FragmentActivity
     val executor = remember { ContextCompat.getMainExecutor(context) }
 
+    // Función de Biometría (Igual que antes)
     fun launchBiometric() {
         if (activity == null) {
             Toast.makeText(context, "Error de hardware", Toast.LENGTH_SHORT).show()
             return
         }
-
         val promptInfo = BiometricPrompt.PromptInfo.Builder()
             .setTitle("Acceso Biométrico")
             .setSubtitle("Inicia sesión con tu huella")
             .setNegativeButtonText("Usar contraseña")
             .build()
-
         val biometricPrompt = BiometricPrompt(activity, executor, object : BiometricPrompt.AuthenticationCallback() {
             override fun onAuthenticationSucceeded(result: BiometricPrompt.AuthenticationResult) {
                 super.onAuthenticationSucceeded(result)
                 val sharedPref = context.getSharedPreferences("TiendaAppPrefs", android.content.Context.MODE_PRIVATE)
                 val savedEmail = sharedPref.getString("biometric_email", null)
-
                 if (savedEmail != null) {
                     Toast.makeText(context, "Identidad confirmada", Toast.LENGTH_SHORT).show()
                     navController.navigate("home/$savedEmail")
                 } else {
-                    Toast.makeText(context, "No hay cuenta vinculada", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, "No hay cuenta vinculada. Inicia sesión normal.", Toast.LENGTH_LONG).show()
                 }
             }
             override fun onAuthenticationError(errorCode: Int, errString: CharSequence) {
@@ -82,17 +86,14 @@ fun LoginScreen(navController: NavController, viewModel: LoginViewModel) {
         biometricPrompt.authenticate(promptInfo)
     }
 
-    // Validación
-    fun validarEmail(valor: String): Boolean {
-        val regex = "^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+$".toRegex()
-        return regex.matches(valor)
-    }
+    // Validaciones
+    fun validarEmail(valor: String): Boolean = "^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+$".toRegex().matches(valor)
     fun validarPassword(valor: String): Boolean = valor.length >= 6
 
     val canSubmit = email.isNotBlank() && password.isNotBlank() &&
             emailError == null && passwordError == null
 
-    // UI
+    // UI Principal
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -102,94 +103,57 @@ fun LoginScreen(navController: NavController, viewModel: LoginViewModel) {
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
 
-        Text(
-            text = "SYSTEM LOGIN",
-            style = MaterialTheme.typography.headlineMedium,
-            color = NeonCyan,
-            fontWeight = FontWeight.Bold,
-            letterSpacing = 2.sp
-        )
-
+        Text("SYSTEM LOGIN", style = MaterialTheme.typography.headlineMedium, color = NeonCyan, fontWeight = FontWeight.Bold, letterSpacing = 2.sp)
         Spacer(modifier = Modifier.height(40.dp))
 
+        // Input Email
         OutlinedTextField(
             value = email,
             onValueChange = {
                 email = it
-                emailError = when {
-                    it.isBlank() -> "El correo es obligatorio"
-                    !validarEmail(it) -> "Formato de correo inválido"
-                    else -> null
-                }
+                emailError = if (it.isBlank()) "Campo obligatorio" else if (!validarEmail(it)) "Correo inválido" else null
             },
             label = { Text("ID de Usuario") },
             isError = emailError != null,
-            supportingText = { emailError?.let { Text(it, color = ErrorRed) } },
+            supportingText = { emailError?.let { msg -> Text(msg, color = ErrorRed) } },
             singleLine = true,
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(12.dp),
             colors = OutlinedTextFieldDefaults.colors(
-                focusedBorderColor = NeonCyan,
-                unfocusedBorderColor = Color.Gray,
-                focusedLabelColor = NeonCyan,
-                unfocusedLabelColor = Color.Gray,
-                focusedTextColor = TextWhite,
-                unfocusedTextColor = TextWhite,
-                cursorColor = NeonCyan,
-                errorTextColor = TextWhite,
-                errorBorderColor = ErrorRed,
-                errorLabelColor = ErrorRed,
-                errorCursorColor = ErrorRed,
-
-                focusedContainerColor = Color.Transparent,
-                unfocusedContainerColor = Color.Transparent,
-                errorContainerColor = Color.Transparent
+                focusedBorderColor = NeonCyan, unfocusedBorderColor = Color.Gray,
+                focusedTextColor = TextWhite, unfocusedTextColor = TextWhite,
+                errorTextColor = TextWhite, errorBorderColor = ErrorRed,
+                focusedContainerColor = Color.Transparent, unfocusedContainerColor = Color.Transparent
             )
         )
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // INPUT PASSWORD
+        // Input Password
         OutlinedTextField(
             value = password,
             onValueChange = {
                 password = it
-                passwordError = when {
-                    it.isBlank() -> "La contraseña es obligatoria"
-                    !validarPassword(it) -> "Debe tener al menos 6 caracteres"
-                    else -> null
-                }
+                passwordError = if (it.isBlank()) "Campo obligatorio" else if (!validarPassword(it)) "Mínimo 6 caracteres" else null
             },
             label = { Text("Clave de Acceso") },
             isError = passwordError != null,
-            supportingText = { passwordError?.let { Text(it, color = ErrorRed) } },
+            supportingText = { passwordError?.let { msg -> Text(msg, color = ErrorRed) } },
             visualTransformation = PasswordVisualTransformation(),
             singleLine = true,
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(12.dp),
             colors = OutlinedTextFieldDefaults.colors(
-                focusedBorderColor = NeonCyan,
-                unfocusedBorderColor = Color.Gray,
-                focusedLabelColor = NeonCyan,
-                unfocusedLabelColor = Color.Gray,
-                focusedTextColor = TextWhite,
-                unfocusedTextColor = TextWhite,
-                cursorColor = NeonCyan,
-                errorTextColor = TextWhite,
-                errorBorderColor = ErrorRed,
-                errorLabelColor = ErrorRed,
-                errorCursorColor = ErrorRed,
-
-                focusedContainerColor = Color.Transparent,
-                unfocusedContainerColor = Color.Transparent,
-                errorContainerColor = Color.Transparent
+                focusedBorderColor = NeonCyan, unfocusedBorderColor = Color.Gray,
+                focusedTextColor = TextWhite, unfocusedTextColor = TextWhite,
+                errorTextColor = TextWhite, errorBorderColor = ErrorRed,
+                focusedContainerColor = Color.Transparent, unfocusedContainerColor = Color.Transparent
             )
         )
 
         Spacer(modifier = Modifier.height(32.dp))
 
-        // BOTÓN ENTRAR
-        val gradientColors = if (canSubmit) listOf(NeonCyan, NeonPurple) else listOf(Color.Gray, Color.DarkGray)
+        val gradientColors = if (canSubmit && !isLoading) listOf(NeonCyan, NeonPurple) else listOf(Color.Gray, Color.DarkGray)
         val brush = Brush.horizontalGradient(gradientColors)
 
         Button(
@@ -197,37 +161,56 @@ fun LoginScreen(navController: NavController, viewModel: LoginViewModel) {
                 if (email == "admin@gmail.com" && password == "Admin123") {
                     navController.navigate("backoffice")
                 } else {
+                    isLoading = true
+
                     viewModel.login(
                         email = email,
                         password = password,
                         onSuccess = {
+                            isLoading = false
                             navController.navigate("home/$email")
                         },
-                        onError = { }
+                        onError = { mensajeError ->
+                            isLoading = false
+                            Toast.makeText(context, mensajeError, Toast.LENGTH_SHORT).show()
+                        }
                     )
                 }
             },
-            enabled = canSubmit,
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(50.dp),
+            enabled = canSubmit && !isLoading,
+            modifier = Modifier.fillMaxWidth().height(50.dp),
             shape = RoundedCornerShape(12.dp),
             colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
             contentPadding = PaddingValues()
         ) {
             Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(brush),
+                modifier = Modifier.fillMaxSize().background(brush),
                 contentAlignment = Alignment.Center
             ) {
-                Text(
-                    text = "ACCEDER",
-                    color = if(canSubmit) Color.White else Color.LightGray,
-                    fontWeight = FontWeight.Bold,
-                    letterSpacing = 1.sp
-                )
+                if (isLoading) {
+                    CircularProgressIndicator(
+                        color = TextWhite,
+                        modifier = Modifier.size(24.dp),
+                        strokeWidth = 3.dp
+                    )
+                } else {
+                    Text(
+                        text = "ACCEDER",
+                        color = if(canSubmit) Color.White else Color.LightGray,
+                        fontWeight = FontWeight.Bold,
+                        letterSpacing = 1.sp
+                    )
+                }
             }
+        }
+
+        if (loginMessage.isNotEmpty() && !isLoading) {
+            Spacer(modifier = Modifier.height(16.dp))
+            Text(
+                text = loginMessage,
+                color = if (loginMessage.contains("exitoso", true)) NeonCyan else ErrorRed,
+                style = MaterialTheme.typography.bodyMedium
+            )
         }
 
         Spacer(modifier = Modifier.height(32.dp))
@@ -244,12 +227,7 @@ fun LoginScreen(navController: NavController, viewModel: LoginViewModel) {
                 .clickable { launchBiometric() },
             contentAlignment = Alignment.Center
         ) {
-            Icon(
-                imageVector = Icons.Default.Fingerprint,
-                contentDescription = "Huella Digital",
-                tint = NeonPurple,
-                modifier = Modifier.size(32.dp)
-            )
+            Icon(Icons.Default.Fingerprint, null, tint = NeonPurple, modifier = Modifier.size(32.dp))
         }
     }
 }
