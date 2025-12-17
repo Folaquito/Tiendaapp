@@ -30,6 +30,7 @@ import com.example.tiendaapp.viewmodel.JuegoViewModel
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import com.example.tiendaapp.R
+import kotlinx.coroutines.launch
 
 private val NeonCyan = Color(0xFF00E5FF)
 private val NeonPurple = Color(0xFFD500F9)
@@ -52,6 +53,11 @@ fun DetalleJuegoScreen(
     val juegoState by viewModel.getGameFlow(juegoId).collectAsState(initial = null)
     val juego = juegoState
     val context = LocalContext.current
+
+    // Estado para el Snackbar (mensaje flotante)
+    val snackbarHostState = remember { SnackbarHostState() }
+    val scope = rememberCoroutineScope() // Para lanzar la animación del snackbar
+
     val imageRequest = remember(juego?.imageUrl) {
         ImageRequest.Builder(context)
             .data(juego?.imageUrl?.ifBlank { null })
@@ -61,6 +67,19 @@ fun DetalleJuegoScreen(
 
     Scaffold(
         containerColor = DarkBg,
+        // Agregamos el Host del Snackbar aquí
+        snackbarHost = {
+            SnackbarHost(hostState = snackbarHostState) { data ->
+                // Personalizamos el Snackbar para que sea estilo Gamer
+                Snackbar(
+                    snackbarData = data,
+                    containerColor = MenuBg,
+                    contentColor = NeonCyan,
+                    shape = RoundedCornerShape(8.dp),
+                    actionColor = NeonPurple
+                )
+            }
+        },
         topBar = {
             TopAppBar(
                 title = {
@@ -90,6 +109,7 @@ fun DetalleJuegoScreen(
                 contentPadding = PaddingValues(16.dp),
                 verticalArrangement = Arrangement.spacedBy(20.dp)
             ) {
+                // ... (IMAGEN Y DATOS IGUAL QUE ANTES) ...
                 item {
                     Card(
                         shape = RoundedCornerShape(16.dp),
@@ -125,7 +145,7 @@ fun DetalleJuegoScreen(
                             Text(
                                 text = juego.price.toClp(),
                                 style = MaterialTheme.typography.headlineSmall,
-                                color = NeonCyan, // Precio en Neon
+                                color = NeonCyan,
                                 fontWeight = FontWeight.Bold
                             )
                             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -173,13 +193,15 @@ fun DetalleJuegoScreen(
                         Text("Descripción", style = MaterialTheme.typography.titleMedium, color = NeonPurple, fontWeight = FontWeight.Bold)
                         Spacer(modifier = Modifier.height(8.dp))
                         Text(
-                            text = juego.description ?: "Sumérgete en esta aventura épica. ${juego.name} ofrece gráficos impresionantes y una jugabilidad que desafiará tus habilidades...",
+                            text = juego.description ?: "Sumérgete en esta aventura épica...",
                             style = MaterialTheme.typography.bodyMedium,
                             color = TextWhite,
                             lineHeight = 22.sp
                         )
                     }
                 }
+
+                // --- AQUÍ ESTÁ EL CAMBIO EN EL BOTÓN ---
                 item {
                     Spacer(modifier = Modifier.height(8.dp))
                     val gradientBrush = Brush.horizontalGradient(listOf(NeonCyan, NeonPurple))
@@ -187,7 +209,16 @@ fun DetalleJuegoScreen(
                     Button(
                         onClick = {
                             cartViewModel.agregarAlCarrito(juego)
-                            navController.navigate("carrito")
+                            // 1. Quitamos la navegación
+                            // navController.navigate("carrito")
+
+                            // 2. Mostramos un mensaje de confirmación
+                            scope.launch {
+                                snackbarHostState.showSnackbar(
+                                    message = "¡${juego.name} agregado al carrito!",
+                                    duration = SnackbarDuration.Short
+                                )
+                            }
                         },
                         modifier = Modifier
                             .fillMaxWidth()
@@ -216,6 +247,8 @@ fun DetalleJuegoScreen(
                         }
                     }
                 }
+
+                // ... (RESTO DE ITEMS: COMENTARIOS, ETC) ...
                 item {
                     Spacer(modifier = Modifier.height(16.dp))
                     Text(
@@ -247,6 +280,7 @@ fun DetalleJuegoScreen(
     }
 }
 
+// ... (GamerBadge, GamerChip, ComentarioCardSimple se mantienen igual abajo) ...
 @Composable
 fun GamerBadge(text: String) {
     Surface(

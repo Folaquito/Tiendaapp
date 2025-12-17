@@ -30,11 +30,11 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import com.example.tiendaapp.R
 
-// --- COLORES GLOBALES (Mismos de las otras pantallas) ---
+// --- COLORES GLOBALES ---
 private val NeonCyan = Color(0xFF00E5FF)
 private val NeonPurple = Color(0xFFD500F9)
 private val DarkBg = Color(0xFF0B1221)
-private val MenuBg = Color(0xFF1F2536) // Usaremos este para las Cards también
+private val MenuBg = Color(0xFF1F2536)
 private val TextWhite = Color(0xFFEEEEEE)
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -58,7 +58,7 @@ fun CatalogoScreen(
     var currentNoteGameId by remember { mutableStateOf<Int?>(null) }
     var currentNoteContent by remember { mutableStateOf("") }
 
-    // Lógica de listas únicas (Igual que antes)
+    // Lógica de listas únicas
     val availableGenres = remember(juegos) {
         juegos.flatMap { it.genres ?: emptyList() }.map { it.name }.distinct().sorted()
     }
@@ -66,7 +66,7 @@ fun CatalogoScreen(
         juegos.flatMap { it.platforms ?: emptyList() }.map { it.platform.name }.distinct().sorted()
     }
 
-    // Lógica de filtrado (Igual que antes)
+    // Lógica de filtrado
     val displayedGames = remember(juegos, favorites, showFavorites, selectedGenre, selectedPlatform) {
         juegos.filter { game ->
             val matchesFavorite = if (showFavorites) favorites.any { it.gameId == game.id } else true
@@ -76,11 +76,11 @@ fun CatalogoScreen(
         }
     }
 
-    // --- DIÁLOGO DE NOTAS (Estilizado Dark) ---
+    // --- DIÁLOGO DE NOTAS ---
     if (showNoteDialog && currentNoteGameId != null) {
         AlertDialog(
             onDismissRequest = { showNoteDialog = false },
-            containerColor = MenuBg, // Fondo oscuro del diálogo
+            containerColor = MenuBg,
             titleContentColor = NeonCyan,
             textContentColor = TextWhite,
             title = { Text("Nota Personal") },
@@ -116,7 +116,7 @@ fun CatalogoScreen(
     }
 
     Scaffold(
-        containerColor = DarkBg, // FONDO GENERAL OSCURO
+        containerColor = DarkBg,
         topBar = {
             TopAppBar(
                 title = {
@@ -126,17 +126,26 @@ fun CatalogoScreen(
                     )
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = DarkBg, // Barra oscura
-                    titleContentColor = NeonCyan, // Título Neón
-                    actionIconContentColor = NeonCyan // Iconos Neón
+                    containerColor = DarkBg,
+                    titleContentColor = NeonCyan,
+                    actionIconContentColor = NeonCyan
                 ),
                 actions = {
+                    // 1. Botón Favoritos (Existente)
                     IconButton(onClick = { showFavorites = !showFavorites }) {
                         Icon(
                             imageVector = if (showFavorites) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
                             contentDescription = "Ver Favoritos",
-                            // Si está activo rojo, si no Cyan
                             tint = if (showFavorites) Color.Red else NeonCyan
+                        )
+                    }
+
+                    // 2. NUEVO: Botón Carrito
+                    IconButton(onClick = { navController.navigate("carrito") }) {
+                        Icon(
+                            imageVector = Icons.Default.ShoppingCart,
+                            contentDescription = "Ir al Carrito",
+                            tint = NeonCyan
                         )
                     }
                 }
@@ -174,7 +183,7 @@ fun CatalogoScreen(
                         text = "Encontrados: ${displayedGames.size} juegos",
                         style = MaterialTheme.typography.bodySmall,
                         modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
-                        color = NeonPurple // Color secundario para info
+                        color = NeonPurple
                     )
                 }
                 Divider(color = Color.Gray.copy(alpha = 0.2f))
@@ -220,6 +229,7 @@ fun CatalogoScreen(
     }
 }
 
+// ... (El resto de tus componentes FilterDropdown y JuegoCard se mantienen igual) ...
 @Composable
 fun FilterDropdown(
     label: String,
@@ -229,7 +239,6 @@ fun FilterDropdown(
     modifier: Modifier = Modifier
 ) {
     var expanded by remember { mutableStateOf(false) }
-    // Color del borde: Si está seleccionado es Cyan, si no Gris Oscuro
     val borderColor = if (selectedOption != null) NeonCyan else Color.Gray
 
     Box(modifier = modifier) {
@@ -273,7 +282,7 @@ fun FilterDropdown(
             onDismissRequest = { expanded = false },
             modifier = Modifier
                 .heightIn(max = 250.dp)
-                .background(MenuBg) // Fondo menú oscuro
+                .background(MenuBg)
                 .border(1.dp, Color.Gray.copy(0.3f), RoundedCornerShape(4.dp))
         ) {
             DropdownMenuItem(
@@ -319,7 +328,7 @@ fun JuegoCard(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(
-            containerColor = MenuBg // Tarjeta gris azulada sobre fondo negro
+            containerColor = MenuBg
         ),
         elevation = CardDefaults.cardElevation(defaultElevation = 6.dp)
     ) {
@@ -336,13 +345,12 @@ fun JuegoCard(
                     placeholder = painterResource(id = R.drawable.ic_launcher_foreground)
                 )
 
-                // Rating Chip
                 Surface(
                     modifier = Modifier
                         .align(Alignment.BottomEnd)
                         .padding(8.dp),
                     shape = RoundedCornerShape(8.dp),
-                    color = Color.Black.copy(alpha = 0.7f) // Semitransparente oscuro
+                    color = Color.Black.copy(alpha = 0.7f)
                 ) {
                     Row(
                         modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
@@ -368,7 +376,6 @@ fun JuegoCard(
             }
 
             Column(modifier = Modifier.padding(16.dp)) {
-                // Título en blanco
                 Text(
                     text = juego.name,
                     style = MaterialTheme.typography.titleLarge,
@@ -380,13 +387,12 @@ fun JuegoCard(
                     Text(
                         text = juego.genres.take(2).joinToString(", ") { it.name },
                         style = MaterialTheme.typography.bodySmall,
-                        color = Color.Gray // Géneros discretos
+                        color = Color.Gray
                     )
                 }
 
                 Spacer(modifier = Modifier.height(12.dp))
 
-                // Sección de Notas (si es favorito)
                 if (isFavorite) {
                     if (!note.isNullOrBlank()) {
                         Text(
@@ -411,7 +417,6 @@ fun JuegoCard(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    // Precio en NEON CYAN grande
                     Text(
                         text = juego.price.toClp(),
                         style = MaterialTheme.typography.titleMedium,
@@ -420,8 +425,6 @@ fun JuegoCard(
                         fontSize = 18.sp
                     )
 
-                    // Botón "Agregar" pequeño pero con estilo Gradient
-                    // Usamos un Box pequeño para replicar el efecto
                     Button(
                         onClick = onAddToCart,
                         enabled = juego.stock > 0,
