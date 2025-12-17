@@ -1,7 +1,6 @@
 package com.example.tiendaapp.views
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -11,14 +10,7 @@ import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
@@ -46,9 +38,19 @@ private val ErrorRed = Color(0xFFFF5252)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CartScreen(navController: NavController, cartViewModel: CartViewModel, loginViewModel: LoginViewModel) {
+    // 1. Observamos la lista de items. Si esta cambia, la pantalla se redibuja.
     val items by cartViewModel.items.collectAsState()
     val currentUser by loginViewModel.currentUser.collectAsState(initial = null)
-    val total = cartViewModel.calcularTotal()
+
+    // --- CORRECCIÓN AQUÍ ---
+    // En lugar de llamar a una función del ViewModel, calculamos el total aquí mismo
+    // basándonos en la lista 'items' que acabamos de recibir.
+    // Esto asegura que el total SIEMPRE coincida con lo que ves en pantalla.
+    val total = remember(items) {
+        items.sumOf { it.game.price * it.cantidad }
+    }
+    // -----------------------
+
     val isProcessing by cartViewModel.isProcessing.collectAsState()
     val errorMessage by cartViewModel.errorMessage.collectAsState()
     val scope = rememberCoroutineScope()
@@ -59,7 +61,7 @@ fun CartScreen(navController: NavController, cartViewModel: CartViewModel, login
     }
 
     Scaffold(
-        containerColor = DarkBg, // Fondo oscuro general
+        containerColor = DarkBg,
         topBar = {
             TopAppBar(
                 title = { Text("Carrito", fontWeight = FontWeight.Bold) },
@@ -128,6 +130,9 @@ fun CartScreen(navController: NavController, cartViewModel: CartViewModel, login
     }
 }
 
+// ... (El resto de funciones: EmptyCart, CartItemCard, TotalSection se mantienen IGUAL) ...
+// No es necesario repetir todo el código de abajo si ya lo tienes,
+// el cambio importante fue solamente en la variable 'total' al inicio.
 @Composable
 private fun EmptyCart(navController: NavController) {
     Column(

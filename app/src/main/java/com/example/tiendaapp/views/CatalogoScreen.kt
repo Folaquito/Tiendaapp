@@ -29,6 +29,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import com.example.tiendaapp.R
+import kotlinx.coroutines.launch
 
 // --- COLORES GLOBALES ---
 private val NeonCyan = Color(0xFF00E5FF)
@@ -57,6 +58,10 @@ fun CatalogoScreen(
     var showNoteDialog by remember { mutableStateOf(false) }
     var currentNoteGameId by remember { mutableStateOf<Int?>(null) }
     var currentNoteContent by remember { mutableStateOf("") }
+
+    // --- ESTADOS PARA SNACKBAR (NUEVO) ---
+    val snackbarHostState = remember { SnackbarHostState() }
+    val scope = rememberCoroutineScope()
 
     // Lógica de listas únicas
     val availableGenres = remember(juegos) {
@@ -117,6 +122,18 @@ fun CatalogoScreen(
 
     Scaffold(
         containerColor = DarkBg,
+        // --- AGREGAMOS EL HOST DEL SNACKBAR ---
+        snackbarHost = {
+            SnackbarHost(hostState = snackbarHostState) { data ->
+                Snackbar(
+                    snackbarData = data,
+                    containerColor = MenuBg, // Fondo oscuro estilo Gamer
+                    contentColor = NeonCyan, // Texto Neón
+                    shape = RoundedCornerShape(8.dp),
+                    actionColor = NeonPurple
+                )
+            }
+        },
         topBar = {
             TopAppBar(
                 title = {
@@ -131,7 +148,6 @@ fun CatalogoScreen(
                     actionIconContentColor = NeonCyan
                 ),
                 actions = {
-                    // 1. Botón Favoritos (Existente)
                     IconButton(onClick = { showFavorites = !showFavorites }) {
                         Icon(
                             imageVector = if (showFavorites) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
@@ -139,8 +155,6 @@ fun CatalogoScreen(
                             tint = if (showFavorites) Color.Red else NeonCyan
                         )
                     }
-
-                    // 2. NUEVO: Botón Carrito
                     IconButton(onClick = { navController.navigate("carrito") }) {
                         Icon(
                             imageVector = Icons.Default.ShoppingCart,
@@ -221,7 +235,16 @@ fun CatalogoScreen(
                             showNoteDialog = true
                         },
                         onClick = { navController.navigate("detalle/${juego.id}") },
-                        onAddToCart = { cartViewModel.agregarAlCarrito(juego) }
+                        onAddToCart = {
+                            // --- LÓGICA DE AGREGAR + MENSAJE ---
+                            cartViewModel.agregarAlCarrito(juego)
+                            scope.launch {
+                                snackbarHostState.showSnackbar(
+                                    message = "¡${juego.name} agregado al carrito!",
+                                    duration = SnackbarDuration.Short
+                                )
+                            }
+                        }
                     )
                 }
             }
@@ -229,7 +252,6 @@ fun CatalogoScreen(
     }
 }
 
-// ... (El resto de tus componentes FilterDropdown y JuegoCard se mantienen igual) ...
 @Composable
 fun FilterDropdown(
     label: String,
