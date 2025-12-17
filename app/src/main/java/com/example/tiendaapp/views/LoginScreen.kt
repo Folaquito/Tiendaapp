@@ -1,23 +1,35 @@
 package com.example.tiendaapp.views
 
+import android.content.Context
+import android.widget.Toast
+import androidx.biometric.BiometricPrompt
+import androidx.core.content.ContextCompat
+import androidx.fragment.app.FragmentActivity
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Fingerprint
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.tiendaapp.viewmodel.LoginViewModel
-import androidx.compose.runtime.rememberCoroutineScope
-import kotlinx.coroutines.launch
+import java.util.concurrent.Executor
 
+// --- COLORES ---
 private val NeonCyan = Color(0xFF00E5FF)
 private val NeonPurple = Color(0xFFD500F9)
 private val DarkBg = Color(0xFF0B1221)
@@ -31,8 +43,53 @@ fun LoginScreen(navController: NavController, viewModel: LoginViewModel) {
     var password by remember { mutableStateOf("") }
     var emailError by remember { mutableStateOf<String?>(null) }
     var passwordError by remember { mutableStateOf<String?>(null) }
-    val scope = rememberCoroutineScope()
 
+    val context = LocalContext.current
+    val activity = context as? FragmentActivity
+    val executor = remember { ContextCompat.getMainExecutor(context) }
+
+    fun launchBiometric() {
+        if (activity == null) {
+            Toast.makeText(context, "Error de hardware", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        val promptInfo = BiometricPrompt.PromptInfo.Builder()
+            .setTitle("Acceso Biométrico")
+            .setSubtitle("Inicia sesión con tu huella")
+            .setNegativeButtonText("Usar contraseña")
+            .build()
+
+        val biometricPrompt = BiometricPrompt(activity, executor, object : BiometricPrompt.AuthenticationCallback() {
+            override fun onAuthenticationSucceeded(result: BiometricPrompt.AuthenticationResult) {
+                super.onAuthenticationSucceeded(result)
+
+                val sharedPref = context.getSharedPreferences("TiendaAppPrefs", Context.MODE_PRIVATE)
+                val savedEmail = sharedPref.getString("biometric_email", null)
+
+                if (savedEmail != null) {
+                    Toast.makeText(context, "Bienvenido de nuevo", Toast.LENGTH_SHORT).show()
+                    navController.navigate("home/$savedEmail")
+                } else {
+                    Toast.makeText(context, "No hay cuenta vinculada a esta huella. Regístrate primero.", Toast.LENGTH_LONG).show()
+                }
+            }
+
+            override fun onAuthenticationError(errorCode: Int, errString: CharSequence) {
+                super.onAuthenticationError(errorCode, errString)
+                Toast.makeText(context, "Error: $errString", Toast.LENGTH_SHORT).show()
+            }
+
+            override fun onAuthenticationFailed() {
+                super.onAuthenticationFailed()
+                Toast.makeText(context, "Huella no reconocida", Toast.LENGTH_SHORT).show()
+            }
+        })
+
+        biometricPrompt.authenticate(promptInfo)
+    }
+
+    // Validación
     fun validarEmail(valor: String): Boolean {
         val regex = "^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+$".toRegex()
         return regex.matches(valor)
@@ -43,6 +100,7 @@ fun LoginScreen(navController: NavController, viewModel: LoginViewModel) {
     val canSubmit = email.isNotBlank() && password.isNotBlank() &&
             emailError == null && passwordError == null
 
+    // UI
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -53,13 +111,14 @@ fun LoginScreen(navController: NavController, viewModel: LoginViewModel) {
     ) {
 
         Text(
-            text = "Inicio de Sesión",
+            text = "SYSTEM LOGIN", // Texto más Cyberpunk
             style = MaterialTheme.typography.headlineMedium,
-            color = TextWhite,
-            fontWeight = FontWeight.Bold
+            color = NeonCyan,
+            fontWeight = FontWeight.Bold,
+            letterSpacing = 2.sp
         )
 
-        Spacer(modifier = Modifier.height(32.dp))
+        Spacer(modifier = Modifier.height(40.dp))
 
         OutlinedTextField(
             value = email,
@@ -71,7 +130,7 @@ fun LoginScreen(navController: NavController, viewModel: LoginViewModel) {
                     else -> null
                 }
             },
-            label = { Text("Email") },
+            label = { Text("ID de Usuario") },
             isError = emailError != null,
             supportingText = { emailError?.let { Text(it, color = ErrorRed) } },
             singleLine = true,
@@ -86,7 +145,6 @@ fun LoginScreen(navController: NavController, viewModel: LoginViewModel) {
                 unfocusedTextColor = TextWhite,
                 cursorColor = NeonCyan,
                 errorBorderColor = ErrorRed,
-                errorLabelColor = ErrorRed,
                 focusedContainerColor = Color.Transparent,
                 unfocusedContainerColor = Color.Transparent
             )
@@ -94,6 +152,7 @@ fun LoginScreen(navController: NavController, viewModel: LoginViewModel) {
 
         Spacer(modifier = Modifier.height(16.dp))
 
+        // INPUT PASSWORD
         OutlinedTextField(
             value = password,
             onValueChange = {
@@ -104,7 +163,7 @@ fun LoginScreen(navController: NavController, viewModel: LoginViewModel) {
                     else -> null
                 }
             },
-            label = { Text("Contraseña") },
+            label = { Text("Clave de Acceso") },
             isError = passwordError != null,
             supportingText = { passwordError?.let { Text(it, color = ErrorRed) } },
             visualTransformation = PasswordVisualTransformation(),
@@ -120,14 +179,12 @@ fun LoginScreen(navController: NavController, viewModel: LoginViewModel) {
                 unfocusedTextColor = TextWhite,
                 cursorColor = NeonCyan,
                 errorBorderColor = ErrorRed,
-                errorLabelColor = ErrorRed,
                 focusedContainerColor = Color.Transparent,
                 unfocusedContainerColor = Color.Transparent
             )
         )
 
         Spacer(modifier = Modifier.height(32.dp))
-
         val gradientColors = if (canSubmit) listOf(NeonCyan, NeonPurple) else listOf(Color.Gray, Color.DarkGray)
         val brush = Brush.horizontalGradient(gradientColors)
 
@@ -136,12 +193,15 @@ fun LoginScreen(navController: NavController, viewModel: LoginViewModel) {
                 if (email == "admin@gmail.com" && password == "Admin123") {
                     navController.navigate("backoffice")
                 } else {
-                    scope.launch {
-                        viewModel.login(email, password,
-                            onSuccess = { navController.navigate("home/$email") },
-                            onError = { }
-                        )
-                    }
+                    viewModel.login(
+                        email = email,
+                        password = password,
+                        onSuccess = {
+                            navController.navigate("home/$email")
+                        },
+                        onError = { mensajeError ->
+                        }
+                    )
                 }
             },
             enabled = canSubmit,
@@ -149,10 +209,7 @@ fun LoginScreen(navController: NavController, viewModel: LoginViewModel) {
                 .fillMaxWidth()
                 .height(50.dp),
             shape = RoundedCornerShape(12.dp),
-            colors = ButtonDefaults.buttonColors(
-                containerColor = Color.Transparent,
-                disabledContainerColor = Color.Transparent
-            ),
+            colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
             contentPadding = PaddingValues()
         ) {
             Box(
@@ -162,12 +219,36 @@ fun LoginScreen(navController: NavController, viewModel: LoginViewModel) {
                 contentAlignment = Alignment.Center
             ) {
                 Text(
-                    text = "Entrar",
+                    text = "ACCEDER",
                     color = if(canSubmit) Color.White else Color.LightGray,
                     fontWeight = FontWeight.Bold,
-                    fontSize = 16.sp
+                    letterSpacing = 1.sp
                 )
             }
+        }
+
+        Spacer(modifier = Modifier.height(32.dp))
+
+        // --- BOTÓN DE HUELLA DIGITAL ---
+        Text("O inicia con biometría", color = Color.Gray, fontSize = 12.sp)
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // Icono circular con borde neón
+        Box(
+            modifier = Modifier
+                .size(64.dp)
+                .clip(CircleShape)
+                .border(2.dp, NeonPurple, CircleShape)
+                .background(Color.Transparent)
+                .clickable { launchBiometric() }, // <--- Acción de Huella
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                imageVector = Icons.Default.Fingerprint,
+                contentDescription = "Huella Digital",
+                tint = NeonPurple,
+                modifier = Modifier.size(32.dp)
+            )
         }
     }
 }

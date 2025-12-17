@@ -28,9 +28,12 @@ import com.example.tiendaapp.Helper.toClp
 import com.example.tiendaapp.viewmodel.CartViewModel
 import com.example.tiendaapp.viewmodel.JuegoViewModel
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.painterResource
 import com.example.tiendaapp.R
 import kotlinx.coroutines.launch
+import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 
 private val NeonCyan = Color(0xFF00E5FF)
 private val NeonPurple = Color(0xFFD500F9)
@@ -49,6 +52,7 @@ fun DetalleJuegoScreen(
     LaunchedEffect(juegoId) {
         viewModel.loadDescription(juegoId)
     }
+    val haptic = LocalHapticFeedback.current
 
     val juegoState by viewModel.getGameFlow(juegoId).collectAsState(initial = null)
     val juego = juegoState
@@ -209,10 +213,7 @@ fun DetalleJuegoScreen(
                     Button(
                         onClick = {
                             cartViewModel.agregarAlCarrito(juego)
-                            // 1. Quitamos la navegación
-                            // navController.navigate("carrito")
-
-                            // 2. Mostramos un mensaje de confirmación
+                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                             scope.launch {
                                 snackbarHostState.showSnackbar(
                                     message = "¡${juego.name} agregado al carrito!",

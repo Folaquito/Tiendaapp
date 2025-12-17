@@ -30,6 +30,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import com.example.tiendaapp.R
 import kotlinx.coroutines.launch
+import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 
 // --- COLORES GLOBALES ---
 private val NeonCyan = Color(0xFF00E5FF)
@@ -45,6 +47,7 @@ fun CatalogoScreen(
     gamesViewModel: JuegoViewModel,
     cartViewModel: CartViewModel
 ) {
+    val haptic = LocalHapticFeedback.current
 
     val juegos by gamesViewModel.games.collectAsState()
     val favorites by gamesViewModel.favorites.collectAsState()
@@ -236,8 +239,8 @@ fun CatalogoScreen(
                         },
                         onClick = { navController.navigate("detalle/${juego.id}") },
                         onAddToCart = {
-                            // --- LÓGICA DE AGREGAR + MENSAJE ---
                             cartViewModel.agregarAlCarrito(juego)
+                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                             scope.launch {
                                 snackbarHostState.showSnackbar(
                                     message = "¡${juego.name} agregado al carrito!",

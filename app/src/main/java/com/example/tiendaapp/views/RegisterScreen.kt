@@ -1,5 +1,6 @@
 package com.example.tiendaapp.views
 
+import android.content.Context // IMPORTANTE
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -14,8 +15,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext // IMPORTANTE
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
@@ -33,7 +37,7 @@ private val MenuBg = Color(0xFF1F2536)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RegisterScreen(navController: NavController, viewModel: LoginViewModel) {
-    // --- ESTADOS (Tu lógica original intacta) ---
+    // --- ESTADOS ---
     var nombre by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
@@ -44,6 +48,11 @@ fun RegisterScreen(navController: NavController, viewModel: LoginViewModel) {
     var comuna by remember { mutableStateOf("") }
     var regionExpanded by remember { mutableStateOf(false) }
     var comunaExpanded by remember { mutableStateOf(false) }
+
+    // --- NUEVO: Estado para el Switch de Biometría ---
+    var enableBiometric by remember { mutableStateOf(false) }
+    val context = LocalContext.current // Necesario para guardar en memoria
+    // ------------------------------------------------
 
     val regionesYComunas = mapOf(
         "Arica y Parinacota" to listOf("Arica", "Camarones", "Putre", "General Lagos"),
@@ -56,9 +65,8 @@ fun RegisterScreen(navController: NavController, viewModel: LoginViewModel) {
     val rutErrorMessage by viewModel.rutError
     var emailError by remember { mutableStateOf<String?>(null) }
     var passwordError by remember { mutableStateOf<String?>(null) }
-    val scope = rememberCoroutineScope()
 
-    // --- FUNCIONES DE VALIDACIÓN ---
+    // --- VALIDACIONES ---
     fun validarEmail(input: String): Boolean {
         val regex = "^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+$".toRegex()
         return regex.matches(input)
@@ -81,7 +89,7 @@ fun RegisterScreen(navController: NavController, viewModel: LoginViewModel) {
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(DarkBg) // CAMBIO: Fondo oscuro
+            .background(DarkBg)
             .padding(20.dp)
             .verticalScroll(rememberScrollState()),
         verticalArrangement = Arrangement.Center,
@@ -98,19 +106,13 @@ fun RegisterScreen(navController: NavController, viewModel: LoginViewModel) {
         Text(
             text = "Registro",
             style = MaterialTheme.typography.titleLarge,
-            color = TextWhite, // CAMBIO: Texto blanco
+            color = TextWhite,
             fontWeight = FontWeight.Bold
         )
 
         Spacer(modifier = Modifier.height(20.dp))
 
-        // USAMOS EL COMPONENTE PERSONALIZADO "GamerTextField"
-        GamerTextField(
-            value = nombre,
-            onValueChange = { nombre = it },
-            label = "Nombre"
-        )
-
+        GamerTextField(value = nombre, onValueChange = { nombre = it }, label = "Nombre")
         Spacer(modifier = Modifier.height(12.dp))
 
         GamerTextField(
@@ -143,7 +145,7 @@ fun RegisterScreen(navController: NavController, viewModel: LoginViewModel) {
             label = "Contraseña",
             isError = passwordError != null,
             errorMessage = passwordError,
-            isPassword = true // Para ocultar caracteres si quieres implementarlo luego
+            isPassword = true
         )
 
         Spacer(modifier = Modifier.height(12.dp))
@@ -161,13 +163,12 @@ fun RegisterScreen(navController: NavController, viewModel: LoginViewModel) {
 
         Spacer(modifier = Modifier.height(12.dp))
 
-        // --- DROPDOWN REGION (Estilizado) ---
+        // DROPDOWNS
         ExposedDropdownMenuBox(
             expanded = regionExpanded,
             onExpandedChange = { regionExpanded = !regionExpanded },
             modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp)
         ) {
-            // Usamos un TextField normal pero con los colores Gamer manuales
             OutlinedTextField(
                 value = region,
                 onValueChange = {},
@@ -203,7 +204,6 @@ fun RegisterScreen(navController: NavController, viewModel: LoginViewModel) {
             }
         }
 
-        // --- DROPDOWN COMUNA (Estilizado) ---
         ExposedDropdownMenuBox(
             expanded = comunaExpanded,
             onExpandedChange = { if (region.isNotEmpty()) comunaExpanded = !comunaExpanded },
@@ -248,31 +248,56 @@ fun RegisterScreen(navController: NavController, viewModel: LoginViewModel) {
 
         Spacer(modifier = Modifier.height(4.dp))
 
-        GamerTextField(
-            value = direccion,
-            onValueChange = { direccion = it },
-            label = "Dirección (Calle y número)"
-        )
+        GamerTextField(value = direccion, onValueChange = { direccion = it }, label = "Dirección (Calle y número)")
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // --- NUEVO: INTERRUPTOR DE BIOMETRÍA ---
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(MenuBg, RoundedCornerShape(12.dp))
+                .padding(12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
+                Text("Habilitar inicio con huella", color = TextWhite, fontWeight = FontWeight.Bold)
+                Text("Inicia sesión más rápido", color = Color.Gray, style = MaterialTheme.typography.bodySmall)
+            }
+            Switch(
+                checked = enableBiometric,
+                onCheckedChange = { enableBiometric = it },
+                colors = SwitchDefaults.colors(
+                    checkedThumbColor = NeonCyan,
+                    checkedTrackColor = NeonPurple.copy(alpha = 0.5f),
+                    uncheckedThumbColor = Color.Gray,
+                    uncheckedTrackColor = DarkBg
+                )
+            )
+        }
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        // --- BOTÓN CON DEGRADADO ---
         GamerButton(
             text = "Registrar",
             onClick = {
-                scope.launch {
-                    viewModel.registrar(
-                        nombre,
-                        email,
-                        password,
-                        rut,
-                        direccion,
-                        region,
-                        comuna,
-                        onSuccess = { navController.navigate("home/${'$'}{it.email}") },
-                        onError = { }
-                    )
-                }
+                viewModel.registrar(
+                    nombre, email, password, rut, direccion, region, comuna,
+                    onSuccess = { response ->
+                        // --- AQUÍ GUARDAMOS EL EMAIL SI EL SWITCH ESTÁ ACTIVO ---
+                        if (enableBiometric) {
+                            val sharedPref = context.getSharedPreferences("TiendaAppPrefs", Context.MODE_PRIVATE)
+                            with(sharedPref.edit()) {
+                                putString("biometric_email", response.email) // Guardamos el email registrado
+                                apply()
+                            }
+                        }
+                        // Navegamos al Home ya logueados
+                        navController.navigate("home/${response.email}")
+                    },
+                    onError = { }
+                )
             },
             enabled = isButtonEnabled
         )
@@ -290,7 +315,7 @@ fun RegisterScreen(navController: NavController, viewModel: LoginViewModel) {
         TextButton(onClick = { navController.navigate("login") }) {
             Text(
                 text = "¿Ya tienes cuenta? Inicia sesión",
-                color = NeonPurple, // Link en morado
+                color = NeonPurple,
                 fontSize = 16.sp
             )
         }
@@ -298,9 +323,8 @@ fun RegisterScreen(navController: NavController, viewModel: LoginViewModel) {
 }
 
 // ==========================================
-// COMPONENTES PERSONALIZADOS (Reutilizables)
+// COMPONENTES PERSONALIZADOS
 // ==========================================
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun GamerTextField(
@@ -320,6 +344,7 @@ fun GamerTextField(
             singleLine = true,
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(12.dp),
+            visualTransformation = if (isPassword) PasswordVisualTransformation() else VisualTransformation.None,
             colors = OutlinedTextFieldDefaults.colors(
                 focusedBorderColor = NeonCyan,
                 unfocusedBorderColor = Color.Gray,
@@ -348,46 +373,17 @@ fun GamerTextField(
 }
 
 @Composable
-fun GamerButton(
-    text: String,
-    onClick: () -> Unit,
-    enabled: Boolean = true,
-    modifier: Modifier = Modifier
-) {
-    // Definimos el degradado: Si está habilitado (Cyan->Morado), si no (Gris->GrisOscuro)
-    val gradientColors = if (enabled) {
-        listOf(NeonCyan, NeonPurple)
-    } else {
-        listOf(Color.Gray, Color.DarkGray)
-    }
-
+fun GamerButton(text: String, onClick: () -> Unit, enabled: Boolean = true, modifier: Modifier = Modifier) {
+    val gradientColors = if (enabled) listOf(NeonCyan, NeonPurple) else listOf(Color.Gray, Color.DarkGray)
     val brush = Brush.horizontalGradient(gradientColors)
-
     Button(
-        onClick = onClick,
-        enabled = enabled,
-        modifier = modifier
-            .fillMaxWidth()
-            .height(50.dp),
+        onClick = onClick, enabled = enabled, modifier = modifier.fillMaxWidth().height(50.dp),
         shape = RoundedCornerShape(12.dp),
-        colors = ButtonDefaults.buttonColors(
-            containerColor = Color.Transparent, // Hacemos transparente el contenedor nativo
-            disabledContainerColor = Color.Transparent
-        ),
+        colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent, disabledContainerColor = Color.Transparent),
         contentPadding = PaddingValues()
     ) {
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(brush),
-            contentAlignment = Alignment.Center
-        ) {
-            Text(
-                text = text,
-                color = if(enabled) Color.White else Color.LightGray,
-                fontWeight = FontWeight.Bold,
-                fontSize = 16.sp
-            )
+        Box(modifier = Modifier.fillMaxSize().background(brush), contentAlignment = Alignment.Center) {
+            Text(text = text, color = if(enabled) Color.White else Color.LightGray, fontWeight = FontWeight.Bold, fontSize = 16.sp)
         }
     }
 }

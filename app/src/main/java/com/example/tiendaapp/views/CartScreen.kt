@@ -26,6 +26,8 @@ import com.example.tiendaapp.model.CartItem
 import com.example.tiendaapp.viewmodel.CartViewModel
 import com.example.tiendaapp.viewmodel.LoginViewModel
 import kotlinx.coroutines.launch
+import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 
 // --- COLORES GLOBALES ---
 private val NeonCyan = Color(0xFF00E5FF)
@@ -42,10 +44,8 @@ fun CartScreen(navController: NavController, cartViewModel: CartViewModel, login
     val items by cartViewModel.items.collectAsState()
     val currentUser by loginViewModel.currentUser.collectAsState(initial = null)
 
-    // --- CORRECCIÓN AQUÍ ---
-    // En lugar de llamar a una función del ViewModel, calculamos el total aquí mismo
-    // basándonos en la lista 'items' que acabamos de recibir.
-    // Esto asegura que el total SIEMPRE coincida con lo que ves en pantalla.
+    val haptic = LocalHapticFeedback.current
+
     val total = remember(items) {
         items.sumOf { it.game.price * it.cantidad }
     }
@@ -87,7 +87,6 @@ fun CartScreen(navController: NavController, cartViewModel: CartViewModel, login
             if (items.isEmpty()) {
                 EmptyCart(navController)
             } else {
-                // Lista de productos
                 LazyColumn(
                     modifier = Modifier.weight(1f),
                     verticalArrangement = Arrangement.spacedBy(12.dp)
@@ -95,15 +94,14 @@ fun CartScreen(navController: NavController, cartViewModel: CartViewModel, login
                     items(items, key = { it.game.id }) { item ->
                         CartItemCard(
                             item = item,
-                            onRemove = { cartViewModel.eliminarDelCarrito(item.game.id) },
+                            onRemove = {haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                        cartViewModel.eliminarDelCarrito(item.game.id) },
                             onDecrease = { cartViewModel.disminuirCantidad(item.game.id) }
                         )
                     }
                 }
 
                 Divider(color = Color.Gray.copy(alpha = 0.3f))
-
-                // Sección de Pago
                 TotalSection(
                     total = total,
                     isProcessing = isProcessing,
@@ -111,6 +109,7 @@ fun CartScreen(navController: NavController, cartViewModel: CartViewModel, login
                     onPay = {
                         if (total <= 0 || isProcessing) return@TotalSection
                         scope.launch {
+                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                             val result = cartViewModel.realizarCompra(
                                 currentUser = currentUser,
                                 buyerName = currentUser?.name ?: "Cliente App",
@@ -130,9 +129,6 @@ fun CartScreen(navController: NavController, cartViewModel: CartViewModel, login
     }
 }
 
-// ... (El resto de funciones: EmptyCart, CartItemCard, TotalSection se mantienen IGUAL) ...
-// No es necesario repetir todo el código de abajo si ya lo tienes,
-// el cambio importante fue solamente en la variable 'total' al inicio.
 @Composable
 private fun EmptyCart(navController: NavController) {
     Column(
@@ -163,7 +159,6 @@ private fun EmptyCart(navController: NavController) {
         )
         Spacer(Modifier.height(32.dp))
 
-        // Botón estilo Gamer
         Button(
             onClick = { navController.popBackStack("catalogo", inclusive = false) },
             colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
@@ -203,7 +198,6 @@ private fun CartItemCard(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // Imagen con bordes redondeados
             Card(
                 shape = RoundedCornerShape(12.dp),
                 modifier = Modifier.size(80.dp)
@@ -216,7 +210,6 @@ private fun CartItemCard(
                 )
             }
 
-            // Info Central
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = item.game.name,
@@ -235,8 +228,6 @@ private fun CartItemCard(
                 )
 
                 Spacer(modifier = Modifier.height(4.dp))
-
-                // Precio Unitario en Cyan
                 Text(
                     text = item.game.price.toClp(),
                     color = NeonCyan,
@@ -244,8 +235,6 @@ private fun CartItemCard(
                     fontSize = 16.sp
                 )
             }
-
-            // Controles de Cantidad
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 IconButton(onClick = onRemove) {
                     Icon(

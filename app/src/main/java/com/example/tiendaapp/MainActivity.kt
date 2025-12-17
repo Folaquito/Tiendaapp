@@ -1,7 +1,7 @@
 package com.example.tiendaapp
 
 import android.os.Bundle
-import androidx.activity.ComponentActivity
+import androidx.fragment.app.FragmentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.material3.Text
@@ -31,16 +31,18 @@ import com.example.tiendaapp.views.PurchaseErrorScreen
 import com.example.tiendaapp.views.PurchaseSuccessScreen
 import com.example.tiendaapp.views.RegisterScreen
 
-class MainActivity : ComponentActivity() {
+class MainActivity : FragmentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+
         val database = AppDatabase.getDatabase(applicationContext)
         val api = RetrofitClient.apiService
         val backend = RetrofitClient.backendService
         val microservice = RetrofitClient.microserviceApiService
         val repository = JuegoRepository(api, database.juegoDao(), backend, microservice)
         val viewModelFactory = JuegoViewModelFactory(repository)
+
         setContent {
             val navController = rememberNavController()
             val viewModel: LoginViewModel = viewModel()
