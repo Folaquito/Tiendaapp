@@ -30,7 +30,8 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-        buildConfigField("String", "MICROSERVICE_BASE_URL", "\"http://10.0.2.2:8081/\"")
+        // Base URL para el backend remoto (IP pública fija via Elastic IP). Debe terminar en "/" para Retrofit.
+        buildConfigField("String", "MICROSERVICE_BASE_URL", "\"http://56.126.64.43:8081/\"")
 
         val rawgApiKey = gradleLocalProperties(rootDir, providers).getProperty("RAWG_API_KEY") ?: ""
         buildConfigField("String", "RAWG_API_KEY", "\"$rawgApiKey\"")
