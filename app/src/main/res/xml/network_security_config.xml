@@ -3,6 +3,6 @@
     <!-- Permite HTTP solo hacia la IP pública del backend -->
     <base-config cleartextTrafficPermitted="false" />
     <domain-config cleartextTrafficPermitted="true">
-        <domain>18.230.66.51</domain>
+        <domain>56.126.64.43</domain>
     </domain-config>
 </network-security-config>
